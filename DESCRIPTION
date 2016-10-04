@@ -1,10 +1,21 @@
 Package: dssatr
 Type: Package
 Title: What the Package Does (Title Case)
-Version: 0.1
-Date: 2015-11-12
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
+Version: 0.1.0
+Date: 2016-09-28
+Authors@R: person(given = "Kyle", family = "Bocinsky", email = "bocinsky@gmail.com", role = c("aut", "cre"))
 Description: More about what it does (maybe more than one line)
-License: What license is it under?
+License: MIT + file LICENSE
 LazyData: TRUE
-Suggests: testthat
+RoxygenNote: 5.0.1
+NeedsCompilation: no
+Depends:
+  R (>= 3.2.0),
+  sp
+Imports:
+  FedData (>= 2.3.0),
+  magrittr,
+  dplyr,
+  soiltexture
+Suggests:
+  testthat

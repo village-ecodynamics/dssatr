@@ -3,11 +3,6 @@ run_dssat <- function(name, cultivars = c("GF0001 Base Garst808-wh403"), weather
   if(file.exists(paste0(out.dir,weather,".csv"))) return()
   dir.create(out.dir, recursive=T, showWarnings=F)
 
-  cultivars <- c("LWPEUB Werth Pueblo",
-                 "LWNORT Werth Northern",
-                 "LWSOUT Werth Southern",
-                 "LWCORN Werth Cornbelt",
-                 "GF0001 Base Garst808-wh403")
   n.cultivars <- length(cultivars)
 
   soils <- weather.soil.dt[["COKEY"]]
