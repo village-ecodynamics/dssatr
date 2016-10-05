@@ -19,7 +19,12 @@
 #' @export
 #' @importFrom FedData get_ssurgo get_daymet
 #' @importFrom magrittr %<>% %>%
-dssat_spatial <- function(template, label, output.dir = "./OUTPUT/", raw.dir = paste0(output.dir,"/DATA/RAW/"), extraction.dir = paste0(output.dir,"/DATA/EXTRACTIONS/"), force.redo = FALSE){
+dssat_spatial <- function(template,
+                          label,
+                          output.dir = "./OUTPUT/",
+                          raw.dir = paste0(output.dir,"/DATA/RAW/"),
+                          extraction.dir = paste0(output.dir,"/DATA/EXTRACTIONS/"),
+                          force.redo = FALSE){
   raw.dir %<>%
     normalizePath(mustWork = FALSE)
 
@@ -27,7 +32,6 @@ dssat_spatial <- function(template, label, output.dir = "./OUTPUT/", raw.dir = p
     normalizePath(mustWork = FALSE)
 
   # Prepare the weather data
-
   cat("Loading the DAYMET weather data \n")
   DAYMET <- FedData::get_daymet(template = template,
                                 label = label,
@@ -40,34 +44,18 @@ dssat_spatial <- function(template, label, output.dir = "./OUTPUT/", raw.dir = p
                                 extraction.dir = paste0(extraction.dir,"/DAYMET/"),
                                 force.redo = force.redo)
 
-  # Calculate daily solar accumulated radiation
-  DAYMET$drad <- DAYMET$srad * DAYMET$dayl / 1000000
+  prep_weather(daymet=DAYMET, label=label, output.dir=paste0(output.dir,"/WEATHER/"))
 
-  # A template raster from the Daymet data
-  rast.temp <- DAYMET[[1]][[1]][[1]]
+  # Prepare the soils data
+  cat("Loading the NRCS soils data \n")
+  SSURGO <- FedData::get_ssurgo(template = template,
+                                label = label,
+                                raw.dir = paste0(raw.dir,"/SSURGO/"),
+                                extraction.dir = paste0(extraction.dir,"/SSURGO/"),
+                                force.redo = force.redo)
 
-  coords <- sp::SpatialPoints(rast.temp)
-  raster::projection(coords) <- raster::projection(rast.temp)
-  coords <- sp::spTransform(coords,"+proj=longlat +ellps=WGS84")@coords
-  dates <- lubridate::as_date(names(DAYMET$prcp),format="X%Y.%m.%d")
-  rowcols <- cbind(raster::rowFromCell(rast.temp,1:nrow(coords)),
-                   raster::colFromCell(rast.temp,1:nrow(coords)))
+  prep_soils(ssurgo=SSURGO[[i]], label=label, out.dir="/Users/Bocinsky/Desktop/MAÍS/DATA/DSSAT/SOIL")
 
-  names(data) <- signals
-  dir.create(paste0(output.dir, "/WEATHER/"), recursive = T, showWarnings = F)
-
-  for(cell in 1:nrow(coords)){
-    if(file.exists(paste0(output.dir, "/WEATHER/",sprintf("%08d", cell),".WTH"))) next
-    cat("\n",cell)
-    prep_weather(out.dir = paste0(output.dir, "/WEATHER/"),
-                 file.name = paste0(sprintf("%08d", cell)),
-                 dates = dates,
-                 coords = coords[cell,],
-                 tmin = DAYMET$tmin[cell],
-                 tmax = DAYMET$tmax[cell],
-                 prcp = DAYMET$prcp[cell],
-                 srad = DAYMET$drad[cell])
-  }
 
   ###
   cat("Loading the NED elevation data\n")
@@ -78,15 +66,9 @@ dssat_spatial <- function(template, label, output.dir = "./OUTPUT/", raw.dir = p
                           extraction.dir = paste0(extraction.dir,"/NED/"),
                           force.redo = force.redo)
 
-  cat("Loading the NRCS soils data \n")
-  SSURGO <- FedData::get_ssurgo(template = template,
-                                label = label,
-                                raw.dir = paste0(raw.dir,"/SSURGO/"),
-                                extraction.dir = paste0(extraction.dir,"/SSURGO/"),
-                                force.redo = force.redo)
 
 
 
 
-  return(list(SSURGO=SSURGO, DAYMET=DAYMET))
+  return(list(SSURGO = SSURGO, DAYMET = DAYMET))
 }
