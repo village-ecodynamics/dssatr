@@ -18,4 +18,8 @@ Imports:
   dplyr,
   soiltexture
 Suggests:
-  testthat
+  testthat,
+    covr,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
