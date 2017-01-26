@@ -1,6 +1,11 @@
-run_dssat <- function(name, cultivars = c("GF0001 Base Garst808-wh403"), weather.soil.dt, start.day, dssat.dir, out.dir){
-  weather <- paste0(name,sprintf("%04d", unique(weather.soil.dt[["CELL"]])))
-  if(file.exists(paste0(out.dir,weather,".csv"))) return()
+run_dssat <- function(name,
+                      cultivars = c("GF0001 Base Garst808-wh403"),
+                      weather,
+                      soil,
+                      start.day,
+                      dssat.dir,
+                      out.dir){
+
   dir.create(out.dir, recursive=T, showWarnings=F)
 
   n.cultivars <- length(cultivars)

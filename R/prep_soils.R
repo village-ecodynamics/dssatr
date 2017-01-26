@@ -1,10 +1,10 @@
 prep_soils <- function(ssurgo, label, out.dir){
   # Load all soil data for study area
   NRCS.polys <- ssurgo[['spatial']]
-  NRCS.mapunit <- ssurgo[['tabular']][["mapunit.csv"]]
-  NRCS.muaggatt <- ssurgo[['tabular']][["muaggatt.csv"]]
-  NRCS.comp <- ssurgo[['tabular']][["component.csv"]]
-  NRCS.chorizon <- ssurgo[['tabular']][["chorizon.csv"]]
+  NRCS.mapunit <- ssurgo[['tabular']][["mapunit"]]
+  NRCS.muaggatt <- ssurgo[['tabular']][["muaggatt"]]
+  NRCS.comp <- ssurgo[['tabular']][["component"]]
+  NRCS.chorizon <- ssurgo[['tabular']][["chorizon"]]
 
   # remove components that do not have albedo data
   NRCS.comp <- NRCS.comp[!is.na(NRCS.comp$albedodry.r),]
@@ -32,7 +32,7 @@ prep_soils <- function(ssurgo, label, out.dir){
   names(NRCS.chorizon.textures) <- c("CLAY","SAND","SILT")
   NRCS.chorizon.textures[NRCS.chorizon.textures<0] <- 0
   NRCS.chorizon.textures[rowSums(NRCS.chorizon.textures) > 100,] <- NRCS.chorizon.textures[rowSums(NRCS.chorizon.textures) > 100,]/rowSums(NRCS.chorizon.textures[rowSums(NRCS.chorizon.textures) > 100,])*100
-  NRCS.chorizon$TEXTURE <- soiltexture::TT.points.in.classes(NRCS.chorizon.textures,
+  NRCS.chorizon$TEXTURE <- soiltexture::TT.points.in.classes(NRCS.chorizon.textures %>% as.data.frame(),
                                                              class.sys = "USDA.TT",
                                                              PiC.type="t")
   NRCS.chorizon$TEXTURE <- gsub(",.*","",NRCS.chorizon$TEXTURE)

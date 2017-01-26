@@ -34,6 +34,7 @@ dssat_spatial <- function(template,
   # Prepare the weather data
   cat("Loading the DAYMET weather data \n")
   DAYMET <- FedData::get_daymet(template = template,
+                                years = 1980:2015,
                                 label = label,
                                 elements = c("prcp",
                                              "tmin",
@@ -54,7 +55,7 @@ dssat_spatial <- function(template,
                                 extraction.dir = paste0(extraction.dir,"/SSURGO/"),
                                 force.redo = force.redo)
 
-  prep_soils(ssurgo=SSURGO[[i]], label=label, out.dir="/Users/Bocinsky/Desktop/MAÍS/DATA/DSSAT/SOIL")
+  prep_soils(ssurgo=SSURGO, label=label, out.dir=paste0(output.dir,"/SOIL/"))
 
 
   ###
