@@ -1,8 +1,18 @@
-dssat_prep_soils <- function(ssurgo){
-  # Load DSSAT data
-  data("dssat_soil_hydrology")
-  data("dssat_drainage_classes")
-  data("dssat_runoff_potential")
+#' Prepare soils imported from the NRCS SSURGO database for use in DSSAT
+#'
+#'This function calculates the soil characteristics needed to run a DSSAT model
+#'from an NRCS SSURGO dataset, created using \code{\link{FedData::get_ssurgo()}}.
+#'
+#' @param ssurgo A NRCS SSURGO dataset, created using \code{\link{FedData::get_ssurgo()}}.
+#' @return A named list of SSURGO data:
+#' \enumerate{
+#' \item 'mapunits': A \code{SpatialPolygonsDataFrame} of mapunits of each soil,
+#' \item 'components': A \code{\link{tibble}} of soil component-level data,
+#' \item 'horizons': A \code{\link{tibble}} of soil horizon-level data.
+#' }
+#' @export
+#' @importFrom magrittr %<>% %>%
+dssat_prep_soils_ssurgo <- function(ssurgo){
   
   # DSSAT requires soils data at the mapunit, component, and horizon levels.
   # This function takes SSURGO data as output from the FedData package, and returns
