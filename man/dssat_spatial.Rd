@@ -34,4 +34,3 @@ spatial DSSAT model, selects the resolution to run the model at based on
 the lowest resolution dataset (Daymet), aggregates all other datasets
 down to that resolution, and preps and runs the simulation on a per-cell basis
 }
-

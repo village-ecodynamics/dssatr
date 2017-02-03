@@ -1,0 +1,9 @@
+Drainage Class,SLDR
+Excessively drained,0.85
+Somewhat excessively drained,0.75
+Well drained,0.6
+Moderately well drained,0.4
+Somewhat poorly drained,0.25
+Poorly drained,0.5
+Very poorly drained,0.01
+"",0.4

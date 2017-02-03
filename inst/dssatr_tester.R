@@ -44,6 +44,7 @@ write_dssat_weather(coords = c(lon,lat),
 
 
 
+
 test <- dssat_spatial(template = mvnp,
                       label = "MVNP",
                       output.dir = output.dir,

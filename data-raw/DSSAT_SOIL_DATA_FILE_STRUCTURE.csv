@@ -1,0 +1,52 @@
+Variable,Unit,Variable name,Header,Leading spaces,Type,Width,Decimals 
+Identifier,,PEDON,ID_SOIL,1,c,10,
+Source,,SLSOUR,SLSOURCE,2,c,11,
+Texture,code,SLTX,SLTX,1,c,5,
+Depth,cm,SLDP,SLDP,1,n,5,0
+Description,,SLDESC,SLDESCRIP ,1,c,50,
+Site name,,SSITE,SITE,1,c,11,
+Country name,,SCOUNT,COUNTRY,1,c,11,
+Latitude ,degrees,SLAT,LAT,1,n,8,3
+Longitude,degrees,SLONG,LONG,1,n,8,3
+Family,SCS code,TACON,SCSFAMILY ,1,c,50,
+"Color, moist",Munsell hue,SCOM,SCOM,1,c,5,
+Albedo (fraction),fraction,SALB,SALB,1,n,5,2
+Evaporation limit,cm,U,SLU1,1,n,5,0
+Drainage rate,fraction/day,SWCON,SLDR,1,n,5,2
+Runoff curve number,,CN2,SLRO,1,n,5,0
+Mineralization factor,0–1,SLNF,SLNF,1,n,5,2
+Photosynthesis factor,0–1,SLPF,SLPF,1,n,5,2
+pH in buffer determination method,code,SMHB,SMHB,1,c,5,
+"Phosphorus, extractable, determination",code,SMPX,SMPX,1,c,5,
+Potassium determination method,code,SMKE,SMKE,1,c,5,
+"Depth, base of layer",cm,ZLYR(L),SLB,1,n,5,0
+Master horizon,,MH(L),SLMH,1,c,5,
+Lower limit,cm3/cm3,LL(L),SLLL,1,n,5,3
+"Upper limit, drained",cm3/cm3,DUL(L),SDUL,1,n,5,3
+"Upper limit, saturated ",cm3/cm3,SAT(L),SSAT,1,n,5,3
+Root growth factor,0–1,SHF(L),SRGF,1,n,5,2
+"Sat. hydraulic conductivity, macropore ",cm/hr,SWCN(L),SSKS,1,n,5,1
+"Bulk density, moist",g/cm3,BD(L),SBDM,1,n,5,2
+Organic carbon,%,OC(L),SLOC,1,n,5,2
+"Clay, <0.002 mm",%,CLAY(L),SLCL,1,n,5,1
+"Silt, 0.05 to 0.002 mm",%,SILT(L),SLSI,1,n,5,1
+"Coarse fraction, >2 mm",%,STONES(L),SLCF,1,n,5,1
+Total nitrogen,%,TOTN(L),SLNI,1,n,5,2
+pH in water,,PH(L),SLHW,1,n,5,1
+pH in buffer,,PHKCL(L),SLHB,1,n,5,1
+Cation exchange capacity,cmol/kg,CEC(L),SCEC,1,n,5,1
+"Phosphorus, extractable",mg/kg,EXTP(L),SLPX,1,n,5,1
+"Phosphorus, total",mg/kg,TOTP(L),SLPT,1,n,5,1
+"Phosphorus, organic",mg/kg,ORGP(L),SLPO,1,n,5,1
+CaCO3 content,g/kg,CACO(L),SLCA,1,n,5,1
+Aluminum,,EXTAL(L),SLAL,1,n,5,1
+Iron,,EXTFE(L),SLFE,1,n,5,1
+Manganese,,EXTMN(L),SLMN ,1,n,5,1
+Base saturation,cmol/kg,TOTBAS(L),SLBS,1,n,5,1
+Phosphorus isotherm A,mmol/kg,PTERMA(L),SLPA,1,n,5,1
+Phosphorus iostherm B,mmol/kg,PTERMB(L),SLPB,1,n,5,1
+"Potassium, exchangeable",cmol/kg,EXK(L),SLKE,1,n,5,1
+Magnesium,cmol/kg,EXMG(L),SLMG,1,n,5,1
+Sodium,cmol/kg,EXNA(L),SLNA,1,n,5,1
+Sulfur,,EXTS(L),SLSU,1,n,5,1
+Electric conductivity,seimen,SLEC(L),SLEC,1,n,5,1

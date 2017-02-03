@@ -17,38 +17,18 @@ rgdal::writeOGR(mvnp, dsn = "./data-raw/", layer = "mvnp", driver = "ESRI Shapef
 
 devtools::use_data(mvnp, overwrite = TRUE)
 
-##### ITRDB DATA
+# DSSAT_GENERIC_SOILS_HORIZON_HYDRO.csv
+dssat_soil_hydrology <- readr::read_csv("./data-raw/DSSAT_GENERIC_SOILS_HORIZON_HYDRO.csv")
+devtools::use_data(dssat_soil_hydrology, overwrite = TRUE)
 
-## Set the calibration period
-# Here, we use a 60 year period ending at 1983
-# to maximize the number of dendro series.
-calibration.years <- 1924:1983
+# DSSAT_DRAINAGE_CLASSES.csv
+dssat_drainage_classes <- readr::read_csv("./data-raw/DSSAT_DRAINAGE_CLASSES.csv", na = "NA")
+devtools::use_data(dssat_drainage_classes, overwrite = TRUE)
 
-## Set the retrodiction years (AD)
-prediction.years <- 1:2000
+# DSSAT_RUNOFF_POTENTIAL.csv
+dssat_runoff_potential <- readr::read_csv("./data-raw/DSSAT_RUNOFF_POTENTIAL.csv", na = "NA")
+devtools::use_data(dssat_runoff_potential, overwrite = TRUE)
 
-## Set a spatial buffer around the area you wish to reconstruct
-## from which to grab tree-ring chronologies. This will probably
-## be in degrees.
-tree.buffer <- 10
-
-## Get Tree-ring data from the ITRDB for 10-degree buffer around MVNP
-# create a 10-degree buffer around the four corner states
-treePoly <- suppressWarnings(rgeos::gBuffer(mvnp, width=tree.buffer, quadsegs=1000))
-# extract the re-whitened residuals of the tree-ring chronologies
-itrdb <- FedData::get_itrdb(template=treePoly, label="MVNP_PLUS_10DEG", raw.dir = "./data-raw/ITRDB/RAW/ITRDB/", extraction.dir = "./data-raw/ITRDB/EXTRACTIONS/ITRDB/", recon.years=prediction.years, calib.years=calibration.years, measurement.type="Ring Width", chronology.type="ARSTND", force.redo = TRUE)
-
-unlink("./data-raw/ITRDB", recursive = T)
-
-devtools::use_data(itrdb, overwrite = TRUE)
-
-
-##### PRISM WATER-YEAR PRECIPITATION
-FedData::pkg_test("parallel")
-# Load all the auxillary functions
-source("./data-raw/annualize_prism_monthly.R")
-## Read the monthly PRISM net precipitation values
-mvnp_prism_ppt_monthly <- raster::brick("./data-raw/mvnp_prism_ppt_monthly.nc4")
-mvnp_prism <- annualize_prism_monthly(prism.brick = mvnp_prism_ppt_monthly, months = c(-2:9), fun = 'sum')
-mvnp_prism <- mvnp_prism[[paste0("X",calibration.years)]]
-devtools::use_data(mvnp_prism, overwrite = TRUE)
+# DSSAT_SOIL_DATA_FILE_STRUCTURE.csv
+dssat_soil_data_file_structure <- readr::read_csv("./data-raw/DSSAT_SOIL_DATA_FILE_STRUCTURE.csv", na = "NA")
+devtools::use_data(dssat_soil_data_file_structure, overwrite = TRUE)
