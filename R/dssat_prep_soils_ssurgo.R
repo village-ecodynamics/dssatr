@@ -151,6 +151,19 @@ dssat_prep_soils_ssurgo <- function(ssurgo){
     dplyr::rename(area = AREASYMBOL,
                   mukey = MUKEY)
   
+  # Make mukey and cokey conform across datasets
+  # NRCS.mapunit@data %<>%
+  #   dplyr::filter(mukey %in% NRCS.component$mukey)
+  # 
+  # NRCS.component %<>%
+  #   dplyr::filter(cokey %in% NRCS.horizon$cokey)
+  # 
+  # NRCS.horizon %<>%
+  #   dplyr::filter(cokey %in% NRCS.component$cokey)
+  # 
+  # NRCS.component %<>%
+  #   dplyr::filter(mukey %in% NRCS.mapunit@data$mukey)
+  # 
   return(list(mapunits = NRCS.mapunit,
               components = NRCS.component,
               horizons = NRCS.horizon))
