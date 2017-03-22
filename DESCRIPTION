@@ -1,6 +1,6 @@
 Package: dssatr
 Type: Package
-Title: What the Package Does (Title Case)
+Title: R Bindings for the Decision Support System for Agrotechnology Transfer (DSSAT) Crop Simulation System
 Version: 0.1.0.9000
 Date: 2016-09-28
 Authors@R: person(given = "Kyle", family = "Bocinsky", email = "bocinsky@gmail.com", role = c("aut", "cre"))
