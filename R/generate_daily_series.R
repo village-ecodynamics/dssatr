@@ -7,7 +7,14 @@ generate_daily_series <- function(annual.series, single.year.daily.training, rec
   annual.daily.training.recon <- single.year.daily.training[recon.days]
   daily.training.norm.recon <- agg.function(annual.daily.training.recon)
 
-  daily.series <- unlist(lapply(annual.series, FUN = function(x,...){delta_adjust(target.norm = x, daily = annual.daily.training.recon, daily.norm = daily.training.norm.recon, fun = fun)}))
+  daily.series <- annual.series %>%
+    lapply(FUN = function(x,...){
+      delta_adjust(target.norm = x,
+                   daily = annual.daily.training.recon,
+                   daily.norm = daily.training.norm.recon,
+                   fun = fun)
+    }) %>%
+    unlist()
 
   return(daily.series)
 }

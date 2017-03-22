@@ -1,50 +1,10 @@
-dssat_write_soils <- function(dssat_soils, label, out.dir){
-  # Load all soil data for study area
-  NRCS.polys <- ssurgo[['spatial']]
-  NRCS.mapunit <- ssurgo[['tabular']][["mapunit"]]
-  NRCS.muaggatt <- ssurgo[['tabular']][["muaggatt"]]
-  NRCS.comp <- ssurgo[['tabular']][["component"]]
-  NRCS.chorizon <- ssurgo[['tabular']][["chorizon"]]
-
-  # remove components that do not have albedo data
-  NRCS.comp <- NRCS.comp[!is.na(NRCS.comp$albedodry.r),]
-
-  # Sort by component
-  NRCS.comp <- NRCS.comp[order(NRCS.comp$cokey),]
-
-  # Trim horizon data
-  NRCS.chorizon <- NRCS.chorizon[NRCS.chorizon$cokey %in% NRCS.comp$cokey,]
-
-  # Sort by horizon depth
-  NRCS.chorizon <- NRCS.chorizon[order(NRCS.chorizon$cokey,NRCS.chorizon$hzdepb.r),]
-
-  # Remove horizons that don't have clay data
-  NRCS.chorizon <- NRCS.chorizon[!is.na(NRCS.chorizon$claytotal.r),]
-
-  # Remove components that only consisted of horizons that were removed
-  NRCS.comp <- NRCS.comp[NRCS.comp$cokey %in% NRCS.chorizon$cokey,]
-
-  # Sanitize the texture data
-  NRCS.chorizon$silttotal.r <- 100-(NRCS.chorizon$claytotal.r + NRCS.chorizon$sandtotal.r)
-  NRCS.chorizon[is.na(NRCS.chorizon$silttotal.r),]$silttotal.r <- (100-NRCS.chorizon[is.na(NRCS.chorizon$silttotal.r),]$claytotal.r)/2
-  NRCS.chorizon[is.na(NRCS.chorizon$sandtotal.r),]$sandtotal.r <- (100-NRCS.chorizon[is.na(NRCS.chorizon$sandtotal.r),]$claytotal.r)/2
-  NRCS.chorizon.textures <- NRCS.chorizon[,c("claytotal.r","sandtotal.r","silttotal.r")]
-  names(NRCS.chorizon.textures) <- c("CLAY","SAND","SILT")
-  NRCS.chorizon.textures[NRCS.chorizon.textures<0] <- 0
-  NRCS.chorizon.textures[rowSums(NRCS.chorizon.textures) > 100,] <- NRCS.chorizon.textures[rowSums(NRCS.chorizon.textures) > 100,]/rowSums(NRCS.chorizon.textures[rowSums(NRCS.chorizon.textures) > 100,])*100
-  NRCS.chorizon$TEXTURE <- soiltexture::TT.points.in.classes(NRCS.chorizon.textures %>% as.data.frame(),
-                                                             class.sys = "USDA.TT",
-                                                             PiC.type="t")
-  NRCS.chorizon$TEXTURE <- gsub(",.*","",NRCS.chorizon$TEXTURE)
-  DSSAT.generic.soil.horizons <- readr::read_csv("../DATA/DSSAT_GENERIC_SOILS_HORIZON_HYDRO.csv")
-
-  depths <- aggregate(NRCS.chorizon[,c("cokey","hzdepb.r")],
-                      by=list(NRCS.chorizon$cokey),max,na.rm=T)[,c("cokey","hzdepb.r")]
-  NRCS.comp <- merge(NRCS.comp,depths,all.x=T,all.y=F)
-
+dssat_write_soils <- function(soils,
+                              file.name = "NAMELESS",
+                              output.dir = "./"){
+  
   ## Build DSSAT series data
   #     ID_SOIL <- format(strtrim(paste(NRCS.components.unique$area,NRCS.components.unique$compname,sep='_'),width=10), width=10)
-  ID_SOIL <- sprintf("%010d", NRCS.comp$cokey)
+  ID_SOIL <- sprintf("%010d", soils$soils[[1]]$components$cokey)
   # ID_SOIL <- format(as.character(NRCS.components.unique$cokey), width=10)
   #   SLSOURCE <- format(strtrim(NRCS.components.unique$cokey, width=11), width=11)
   SLSOURCE <- format(strtrim(NRCS.comp$compname,width=11), width=11)
