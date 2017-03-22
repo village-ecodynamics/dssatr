@@ -10,12 +10,13 @@ LazyData: TRUE
 RoxygenNote: 6.0.0
 NeedsCompilation: no
 Depends:
-  R (>= 3.2.0),
-  sp,
-  magrittr
+  R (>= 3.2.0)
 Imports:
-  FedData (>= 2.3.0),
+  FedData (>= 2.4.5),
+  sf,
+  magrittr,
   dplyr,
+  readr,
   soiltexture
 Suggests:
   testthat,
