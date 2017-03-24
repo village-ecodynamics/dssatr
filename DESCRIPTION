@@ -7,20 +7,22 @@ Authors@R: person(given = "Kyle", family = "Bocinsky", email = "bocinsky@gmail.c
 Description: More about what it does (maybe more than one line)
 License: MIT + file LICENSE
 LazyData: TRUE
-RoxygenNote: 6.0.0
+RoxygenNote: 6.0.1
 NeedsCompilation: no
 Depends:
-  R (>= 3.2.0)
+  R (>= 3.2.0),
+  sf
 Imports:
   FedData (>= 2.4.5),
-  sf,
   magrittr,
   dplyr,
   readr,
-  soiltexture
+  soiltexture,
+  sp,
+  raster
 Suggests:
   testthat,
-    covr,
-    knitr,
-    rmarkdown
+  covr,
+  knitr,
+  rmarkdown
 VignetteBuilder: knitr

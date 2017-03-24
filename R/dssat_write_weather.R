@@ -6,7 +6,7 @@ dssat_write_weather <- function(weather,
                                 prcp,
                                 srad,
                                 file.name = "NAMELESS",
-                                output.dir = "./"){
+                                output.dir = "."){
   
   if(!missing(weather)){
     coords <- weather$geometry %>% 

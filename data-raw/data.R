@@ -39,3 +39,24 @@ devtools::use_data(dssat_soil_hydrology,
                    dssat_soil_data_file_structure,
                    overwrite = TRUE,
                    internal = T)
+
+# Daymet grid
+## Load spatial grid for the DAYMET dataset
+
+dir.create("./data-raw/daymet", showWarnings = F, recursive = T)
+# download shapefile directory
+FedData::download_data("https://thredds.daac.ornl.gov/thredds/fileServer/ornldaac/1343/daymet_v3_prcp_annttl_1980_na.nc4", destdir="./data-raw/daymet")
+# read shapefile
+daymet <- raster::raster("./data-raw/daymet/daymet_v3_prcp_annttl_1980_na.nc4") %>%
+  raster:::readAll() %>%
+  raster::setValues(NA)
+
+daymet %<>% raster::raster(.)
+
+raster::dataType(daymet) <- "LOG1S"
+
+devtools::use_data(daymet,
+                   overwrite = TRUE,
+                   compress = "xz")
+
+unlink("./data-raw/daymet", recursive=T)

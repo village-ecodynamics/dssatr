@@ -1,48 +1,91 @@
-dssat_get_daymet <- function(coords,
-                             longitude,
-                             latitude,
-                             years = 1980:2015){
-  vars <- c("prcp",
-            "tmin",
-            "tmax",
-            "srad",
-            "dayl")
+dssat_get_daymet <- function(x,
+                             years = 1980:2015,
+                             vars = c("prcp",
+                                      "tmin",
+                                      "tmax",
+                                      "srad",
+                                      "dayl")){
   
-  if(missing(coords)){
-    if(missing(longitude))
-      stop("Either coords or longitude/latitude vectors must be supplied.")
-    
-    if(!identical(length(longitude),length(latitude)))
-      warning("Longitude and latitude vectors are different lengths. Values will be recycled.")
-    
-    coords <- tibble::tibble(longitude = longitude,
-                             latitude = latitude)
-  }
+  data(daymet)
   
-  if(is.matrix(coords)) {
-    coords %<>%
-      tibble::as_tibble() %>%
-      magrittr::set_names(c("longitude","latitude"))
-  }
-
-  daymet <- stringr::str_c("https://daymet.ornl.gov/data/send/saveData?",
-                         "lat=",coords$latitude,
-                         "&lon=",coords$longitude,
-                         "&measuredParams=",stringr::str_c(vars, collapse = ","),
-                         "&year=",stringr::str_c(years, collapse = ",")) %>%
-    purrr::map(function(x){
-      x %>%
+  x %<>% 
+    sf::st_transform("+proj=longlat +datum=WGS84")
+  
+  x.sp <- x %>%
+    sf::st_transform(raster::projection(daymet)) %>%
+    as("Spatial") %>%
+    FedData::polygon_from_extent()
+  
+  tiles <- daymet %>%
+    raster::crop(x.sp,
+                 snap = "out") %>%
+    as('SpatialPolygons') %>%
+    sf::st_as_sf() %>%
+    sf::st_transform("+proj=longlat +datum=WGS84")
+  
+  suppressMessages({
+    tiles %<>%
+      dplyr::filter(sf::st_intersects(tiles,x, sparse = F)[,1])  %>%
+      dplyr::mutate(tile = 1:n())
+  })
+  
+  daymet <- tiles %>%
+    purrr::by_row(function(x){
+      suppressWarnings({
+        coords <- x %$%
+          geometry %>%
+          sf::st_centroid() %>%
+          magrittr::extract2(1) %>%
+          as.numeric()
+      })
+      
+      stringr::str_c("https://daymet.ornl.gov/data/send/saveData?",
+                     "lat=",coords[2],
+                     "&lon=",coords[1],
+                     "&measuredParams=",stringr::str_c(vars, collapse = ","),
+                     "&year=",stringr::str_c(years, collapse = ",")) %>%
         httr::GET() %>%
         httr::content(as = "text",
                       encoding = "UTF-8") %>%
         readr::read_csv(skip = 7) %>%
-        dplyr::mutate(drad = `srad (W/m^2)` * `dayl (s)` / 1000000)
-    }) %>%
-    tibble(weather = ., geometry = coords %>%
-             purrr::by_row(purrr::lift_vl(sf::st_point)) %$%
-            `.out` %>%
-             sf::st_sfc(crs = "+proj=longlat +datum=WGS84")) %>%
+        dplyr::mutate(drad = `srad (W/m^2)` * `dayl (s)` / 1000000) %>%
+        return()
+      
+    },
+    .to = "weather") %>%
     sf::st_as_sf()
   
-    return(daymet)
+  
+  geoms_char <- x %>%
+    sf::st_geometry_type() %>%
+    as.character()
+  
+  geoms_char <- c(geoms_char,
+                  geoms_char %>%
+                    gsub(pattern = "MULTI",
+                         replacement = "",
+                         x = .),
+                  stringr::str_c("MULTI",geoms_char)
+  ) %>%
+    unique()
+  
+  suppressWarnings({
+    sub_geoms <- tiles %>%
+      sf::st_intersection(x) %>%
+      dplyr::filter(sf::st_geometry_type(geoms) %in% geoms_char) %>%
+      sf::st_as_sf() %>%
+      sf::st_cast() %>%
+      as.data.frame() %>%
+      dplyr::group_by(tile) %>%
+      dplyr::summarise(geometry = sf::st_combine(geometry))
+  })
+    
+  daymet$geometry <- sub_geoms$geometry
+  
+  daymet %<>%
+    dplyr::select(-tile)
+
+  class(daymet) <- c(class(daymet),"weather")
+  
+  return(daymet)
 }

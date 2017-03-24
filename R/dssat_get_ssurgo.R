@@ -1,11 +1,48 @@
-dssat_get_ssurgo <- function(wkt_geom){
-  mapunit <- wkt_geom %>%
-    stringr::str_c("SELECT mukey, muname
-                     FROM mapunit
-                 WHERE mukey IN (
-                 SELECT * from SDA_Get_Mukey_from_intersection_with_WktWgs84('",.,"')
-                 )") %>%
-    SDA_query()
+dssat_get_ssurgo <- function(x){
+
+  x %<>% 
+    sf::st_transform("+proj=longlat +datum=WGS84")
+  
+  wkt_geom <- x %>%
+    sf::st_union() %>%
+    sf::st_as_text()
+  
+  geoms_char <- x %>%
+    sf::st_geometry_type() %>%
+    as.character()
+  
+  geoms_char <- c(geoms_char,
+                  geoms_char %>%
+                    gsub(pattern = "MULTI",
+                         replacement = "",
+                         x = .),
+                  stringr::str_c("MULTI",geoms_char)
+  ) %>%
+    unique()
+  
+  suppressWarnings({
+    mapunit <- wkt_geom %>%
+      stringr::str_c(
+        "select G.MupolygonWktWgs84 as geom, mapunit.mukey, muname
+          FROM mapunit
+          CROSS APPLY SDA_Get_MupolygonWktWgs84_from_Mukey(mapunit.mukey) as G
+          WHERE mukey IN (
+          SELECT * from SDA_Get_Mukey_from_intersection_with_WktWgs84('",.,"')
+          )"
+      ) %>%
+      SDA_query() %>%
+      dplyr::mutate(mukey = as.character(mukey),
+                    geom = sf::st_as_sfc(geom, "+proj=longlat +datum=WGS84")) %>%
+      tibble::as_tibble() %>%
+      dplyr::group_by(mukey, muname)  %>%
+      dplyr::summarise(geom = sf::st_combine(geom)) %>%
+      dplyr::ungroup() %>%
+      sf::st_as_sf() %>%
+      sf::st_intersection(x) %>%
+      dplyr::filter(sf::st_geometry_type(geoms) %in% geoms_char) %>%
+      sf::st_as_sf() %>%
+      sf::st_cast()
+  })
   
   component <- stringr::str_c("SELECT mukey, cokey, compname, albedodry_r, comppct_r, taxclname, taxpartsize, drainagecl, runoff
                      FROM component
@@ -39,8 +76,7 @@ dssat_get_ssurgo <- function(wkt_geom){
                   SMHB = NA,
                   SMPX = NA,
                   SMKE = NA) %>%
-    dplyr::select(mukey,cokey,`Component percent`,ID_SOIL:SMKE) %>%
-    dplyr::group_by(mukey)
+    dplyr::select(mukey,cokey,`Component percent`,ID_SOIL:SMKE)
   
   ## HORIZON LEVEL DATA ##
   horizon <- stringr::str_c("SELECT *
@@ -57,7 +93,7 @@ dssat_get_ssurgo <- function(wkt_geom){
                   sandtotal_r = ifelse(is.na(sandtotal_r),
                                        (100 - claytotal_r) / 2,
                                        sandtotal_r))
-    
+  
   
   # Bind with texture data from USDA
   horizon %<>% bind_cols(
@@ -114,13 +150,12 @@ dssat_get_ssurgo <- function(wkt_geom){
                    SLSU = NA,
                    SLEC = ec_r) %>%
     dplyr::select(cokey,
-                  SLB:SLEC) %>%
-    dplyr::group_by(cokey)
+                  SLB:SLEC)
   
   
   # Functions to get the maximum depth of a layer
   max_depth <- function(component_key){
-  horizon %>%
+    horizon %>%
       dplyr::filter(cokey == component_key) %>%
       dplyr::summarise(max(SLB)) %$%
       `max(SLB)`
@@ -133,14 +168,19 @@ dssat_get_ssurgo <- function(wkt_geom){
   
   component %<>%
     dplyr::mutate(SLDP = max_depth_vect(ID_SOIL))
-                  
-
-  list(mapunits = mapunit,
-       components = component,
-       horizons = horizon) %>%
+  
+  
+  out <- list(mapunits = mapunit,
+              components = component,
+              horizons = horizon) %>%
     list() %>%
-  tibble(soils = ., geometry = wkt_geom %>%
-           sf::st_as_sfc(crs = "+proj=longlat +datum=WGS84")) %>%
-    sf::st_as_sf() %>%
-    return()
+    tibble(soils = .,
+           geometry = .[[1]]$mapunits %>%
+             sf::st_combine()) %>%
+    sf::st_as_sf() 
+  
+  class(out) <- c("soils",
+                  class(out))
+  
+  return(out)
 }
