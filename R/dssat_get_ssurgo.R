@@ -1,7 +1,7 @@
 dssat_get_ssurgo <- function(x){
-
+  
   x %<>% 
-    sf::st_transform("+proj=longlat +datum=WGS84")
+    sf::st_transform(4326)
   
   wkt_geom <- x %>%
     sf::st_union() %>%
@@ -20,37 +20,51 @@ dssat_get_ssurgo <- function(x){
   ) %>%
     unique()
   
-  suppressWarnings({
-    mapunit <- wkt_geom %>%
-      stringr::str_c(
-        "select G.MupolygonWktWgs84 as geom, mapunit.mukey, muname
+  
+  mapunit <- wkt_geom %>%
+    stringr::str_c(
+      "select G.MupolygonWktWgs84 as geom, mapunit.mukey, muname
           FROM mapunit
           CROSS APPLY SDA_Get_MupolygonWktWgs84_from_Mukey(mapunit.mukey) as G
           WHERE mukey IN (
           SELECT * from SDA_Get_Mukey_from_intersection_with_WktWgs84('",.,"')
           )"
+    ) %>%
+    dssat_sda_query() %>%
+    dplyr::mutate(mukey = as.character(mukey),
+                  geom = sf::st_as_sfc(geom, 
+                                       crs = 4326)) %>%
+    tibble::as_tibble() %>%
+    sf::st_as_sf()
+  
+  suppressMessages({
+    mapunit %<>%
+      dplyr::filter(
+        sf::st_intersects(
+          mapunit,
+          x,
+          sparse = F) %>%
+          apply(1, any)
       ) %>%
-      SDA_query() %>%
-      dplyr::mutate(mukey = as.character(mukey),
-                    geom = sf::st_as_sfc(geom, "+proj=longlat +datum=WGS84")) %>%
-      tibble::as_tibble() %>%
       dplyr::group_by(mukey, muname)  %>%
       dplyr::summarise(geom = sf::st_combine(geom)) %>%
       dplyr::ungroup() %>%
-      sf::st_as_sf() %>%
-      sf::st_intersection(x) %>%
-      dplyr::filter(sf::st_geometry_type(geoms) %in% geoms_char) %>%
       sf::st_as_sf() %>%
       sf::st_cast()
   })
   
   component <- stringr::str_c("SELECT mukey, cokey, compname, albedodry_r, comppct_r, taxclname, taxpartsize, drainagecl, runoff
                      FROM component
-                 WHERE mukey IN (", stringr::str_c(mapunit$mukey, collapse = ","),")") %>%
-    SDA_query() %>%
+                 WHERE mukey IN (",
+                              stringr::str_c(mapunit$mukey %>% unique(),
+                                             collapse = ","),
+                              ")") %>%
+    dssat_sda_query() %>%
     dplyr::filter(!is.na(albedodry_r)) %>%
     dplyr::arrange(cokey) %>%
-    dplyr::mutate(`Component percent` = comppct_r,
+    dplyr::mutate(mukey = as.character(mukey),
+                  cokey = as.character(cokey),
+                  `Component percent` = comppct_r,
                   ID_SOIL = cokey,
                   SLSOURCE = compname,
                   SLTX = NA,
@@ -76,13 +90,13 @@ dssat_get_ssurgo <- function(x){
                   SMHB = NA,
                   SMPX = NA,
                   SMKE = NA) %>%
-    dplyr::select(mukey,cokey,`Component percent`,ID_SOIL:SMKE)
+    dplyr::select(mukey, cokey, `Component percent`, ID_SOIL:SMKE)
   
   ## HORIZON LEVEL DATA ##
   horizon <- stringr::str_c("SELECT *
                                   FROM chorizon
                                   WHERE cokey IN (", stringr::str_c(component$cokey, collapse = ","),")") %>%
-    SDA_query() %>%
+    dssat_sda_query() %>%
     dplyr::arrange(cokey,
                    hzdepb_r) %>%
     dplyr::filter(!is.na(claytotal_r)) %>%
@@ -96,7 +110,7 @@ dssat_get_ssurgo <- function(x){
   
   
   # Bind with texture data from USDA
-  horizon %<>% bind_cols(
+  horizon %<>% dplyr::bind_cols(
     tibble::tibble(TEXTURE = soiltexture::TT.points.in.classes(tri.data = horizon %>%
                                                                  dplyr::select(claytotal_r,sandtotal_r,silttotal_r) %>% 
                                                                  dplyr::rename(CLAY = claytotal_r,
@@ -108,7 +122,8 @@ dssat_get_ssurgo <- function(x){
   )
   
   horizon %<>%
-    dplyr::mutate( SLB = hzdepb_r,
+    dplyr::mutate( cokey = as.character(cokey),
+      SLB = hzdepb_r,
                    SLMH = NA,
                    
                    SLLL = wfifteenbar_r/100,
@@ -172,15 +187,9 @@ dssat_get_ssurgo <- function(x){
   
   out <- list(mapunits = mapunit,
               components = component,
-              horizons = horizon) %>%
-    list() %>%
-    tibble(soils = .,
-           geometry = .[[1]]$mapunits %>%
-             sf::st_combine()) %>%
-    sf::st_as_sf() 
+              horizons = horizon)
   
-  class(out) <- c("soils",
-                  class(out))
+  class(out) <- c(class(out), "soil")
   
   return(out)
 }

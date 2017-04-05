@@ -8,12 +8,13 @@ Description: More about what it does (maybe more than one line)
 License: MIT + file LICENSE
 LazyData: TRUE
 RoxygenNote: 6.0.1
+Roxygen: list(markdown = TRUE)
 NeedsCompilation: no
 Depends:
-  R (>= 3.2.0),
-  sf
+  R (>= 3.2.0)
 Imports:
   FedData (>= 2.4.5),
+  sf,
   magrittr,
   dplyr,
   readr,

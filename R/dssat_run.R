@@ -1,6 +1,47 @@
-prep_dssat_parameters <- function(weather, soil, start.day, end.day, out.dir){
+dssat_run <- function(name,
+                      cultivars = c("GF0001 Base Garst808-wh403"),
+                      weather,
+                      soil,
+                      start.day,
+                      dssat.dir,
+                      out.dir){
+
+  dir.create(out.dir, recursive=T, showWarnings=F)
+
+  # Get a geometric representation of soil/weather combinations
+  suppressWarnings({
+    weather_soil <- soil %$%
+      mapunits %>%
+      sf::st_intersection(aoi) %>%
+      sf::st_intersection(x = weather %>%
+                            dplyr::select(-weather),
+                          y = .) %>%
+      dplyr::left_join(soil %$%
+                         components %>%
+                         dplyr::select(mukey, ID_SOIL),
+                       by = "mukey") %>%
+      dplyr::select(-mukey, -muname) %>%
+      dplyr::distinct() %>%
+      tibble::as_tibble() %>%
+      sf::st_as_sf()
+  })
+  
+  soils <- soil %$%
+    components %$%
+    cokey %>%
+    sort()
+  
+  treatment.tab <- expand.grid(
+    CULTIVAR = 1:length(cultivars),
+    SOIL = soils
+  )
+
+  weather <- weather$tile %>% 
+    stringr::str_pad(width = 8, pad = "0") %>%
+    magrittr::extract2(1)
+
   ## HEADER ##
-  header.lines <- c(paste0("*EXP.DETAILS: ",weather,"_",soil," RAINFED MAIZE"),
+  header.lines <- c(paste0("*EXP.DETAILS: ",weather,"MZ RAINFED MAIZE"),
                     "",
                     "*GENERAL",
                     "@PEOPLE",
@@ -8,33 +49,49 @@ prep_dssat_parameters <- function(weather, soil, start.day, end.day, out.dir){
                     "@ADDRESS",
                     "WSU, PULLMAN",
                     "@SITE",
-                    paste0(weather,"_",soil),
+                    paste0(weather),
                     "")
-  
+
   ## TREATMENTS ##
-  treatments <- unlist(lapply(1:length(soil),function(x){paste(sprintf("%2d", x)," 1 0 0 RAINFED                    1 ",sprintf("%2d", x),"  0  1  1  0  0  0  0  0  0  0  1",sep='')}))
+  treatments <- lapply(1:nrow(treatment.tab),function(i){
+    real <- i
+    while(i>99){
+      i <- i-99
+    }
+    paste(sprintf("%2d", i)," 1 0 0 RAINFED                   ",sprintf("%2d", treatment.tab$CULTIVAR[[real]])," ",sprintf("%2d", treatment.tab$SOIL[[real]]),"  0  1  1  0  0  0  0  0  0  0  1",sep='')
+  })
   treatment.lines <- c("*TREATMENTS                        -------------FACTOR LEVELS------------",
                        "@N R O C TNAME.................... CU FL SA IC MP MI MF MR MC MT ME MH SM",
                        treatments,
                        "")
-  
+
   ## CULTIVARS ##
+  cultivar.lines <- unlist(lapply(1:length(cultivars),function(i){
+    paste0(sprintf("%2d", i)," MZ ",cultivars[[i]])
+  }))
   cultivar.lines <- c("*CULTIVARS",
                       "@C CR INGENO CNAME",
-                      " 1 MZ AC0001 TOHONO O'odham",
+                      cultivar.lines,
                       "")
-  
+
   ## FIELDS ##
-  fields <- unlist(lapply(1:length(soil),function(x){paste(sprintf("%2d", x)," ",soil[[x]]," ",weather[[x]],"   -99     0 DR000     0     0 00000 -99   ",sprintf("%4d", -99),"  ",sprintf("%010d", soil[[x]])," RAINFED",sep='')}))
+  fields <- 1:length(soils) %>%
+    lapply(function(i){
+      paste(sprintf("%2d", i)," ",soils[[i]]," ",weather,"   -99     0 DR000     0     0 00000  -99  ",sprintf("%4d", -99),"  ",sprintf("%010s", soils[[i]])," RAINFED",sep='')
+    }) %>%
+    unlist()
+
+  
   field.lines <- c("*FIELDS",
                    "@L ID_FIELD WSTA....  FLSA  FLOB  FLDT  FLDD  FLDS  FLST SLTX  SLDP  ID_SOIL    FLNAME",
                    fields,
                    "")
-  
+
+  start.day <- 81001
   ## INITIAL CONDITIONS ##
   initial.cond.lines <- c("*INITIAL CONDITIONS",
                           "@C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME",
-                          paste(" 1    MZ ",start.day,"   100     0     1     1   -99  1000    .8     0   100    15 -99",sep=''),
+                          paste(" 1    MZ ",start.day,"   100     0     1     1   -99  1000    .8     0   100    15    -99",sep=''),
                           "@C  ICBL  SH2O  SNH4  SNO3",
                           " 1     5    .3   -99   -99",
                           " 1    15    .3   -99   -99",
@@ -43,17 +100,17 @@ prep_dssat_parameters <- function(weather, soil, start.day, end.day, out.dir){
                           " 1    90    .3   -99   -99",
                           " 1   120    .3   -99   -99",
                           "")
-  
+
   ## PLANTING DETAILS ##
   planting.details.lines <- c("*PLANTING DETAILS",
                               "@P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME",
                               paste(" 1 ",81136,"   -99   0.5   0.5     S     H   100   -99    15   -99   -99   -99     4     0                        -99",sep=''),
                               "")
-  
+
   ## SIMULATION CONTROLS ##
   simulation.control.lines <- c("*SIMULATION CONTROLS",
                                 "@N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL",
-                                paste0(" 1 GE          ",sprintf("%5d", 33),"     1     S ",start.day,"  0001 ",weather,"_",soil,"         MZCER"),
+                                paste0( " 1 GE          ",sprintf("%5d", 33),"     1     S ",start.day,"  0001 ",weather,"                  MZCER"),
                                 "@N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2",
                                 " 1 OP              Y     N     N     N     N     N     N     N     M",
                                 "@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL",
@@ -63,7 +120,7 @@ prep_dssat_parameters <- function(weather, soil, start.day, end.day, out.dir){
                                 "@N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT",
                                 " 1 OU              N     N     Y     1     N     N     N     N     N     N     N     N     N",
                                 "")
-  
+
   automatic.management.lines <- c("@  AUTOMATIC MANAGEMENT",
                                   "@N PLANTING    PFRST PLAST PH2OL PH2OU PH2OD PSTMX PSTMN",
                                   " 1 PL          81136 81167     0   100    30    40    10",
@@ -73,11 +130,42 @@ prep_dssat_parameters <- function(weather, soil, start.day, end.day, out.dir){
                                   " 1 RE            100     1    20",
                                   "@N HARVEST     HFRST HLAST HPCNP HPCNR",
                                   " 1 HA              0 82135   100     0")
-  
-  dir.create(out.dir, recursive=T, showWarnings = F)
-  
-  fileConn<-file(paste(out.dir,weather,".MZX",sep=''))
-  writeLines(c(header.lines,treatment.lines,cultivar.lines,field.lines,initial.cond.lines,planting.details.lines,simulation.control.lines,automatic.management.lines), fileConn)
+
+  dir.create(dssat.dir, recursive=T, showWarnings = F)
+
+  fileConn<-file(paste0(dssat.dir,"/",weather,".MZX"), raw=T)
+  writeLines(as.character(c(header.lines,
+                            treatment.lines,
+                            cultivar.lines,
+                            field.lines,
+                            initial.cond.lines,
+                            planting.details.lines,
+                            simulation.control.lines,
+                            automatic.management.lines)), 
+             fileConn)
   close(fileConn)
+
   
+  
+  currentwd <- getwd()
+  setwd(paste0(dssat.dir,"/"))
+  system(paste0("./dscsm046.exe A ",weather,".MZX"), ignore.stdout=T, ignore.stderr=T)
+
+
+
+  out <- read.fwf(file="./Summary.OUT", skip=4, widths=c(64, 9, 9, 11, 8, 57, 5), header=F, as.is=T)
+  out <- out[,c(2,3,5,7)]
+  names(out) <- c("SOIL","CELL","YEAR","YIELD")
+  out$CULTIVAR <- rep(treatment.tab$CULTIVAR,each=33)
+  out$CULTIVAR <- cultivars[out$CULTIVAR]
+
+  out$CELL <- gsub(name,"",out$CELL)
+  out$YEAR <- gsub("001$","",out$YEAR)
+  out$YIELD[out$YIELD == "-99"] <- 0
+
+  file.remove(paste0(dssat.dir,"/",weather,".MZX"))
+
+  setwd(currentwd)
+
+  write.csv(out, paste0(out.dir,weather,".csv"), row.names=F)
 }

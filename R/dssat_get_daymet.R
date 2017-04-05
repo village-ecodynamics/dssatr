@@ -9,7 +9,7 @@ dssat_get_daymet <- function(x,
   data(daymet)
   
   x %<>% 
-    sf::st_transform("+proj=longlat +datum=WGS84")
+    sf::st_transform(4326)
   
   x.sp <- x %>%
     sf::st_transform(raster::projection(daymet)) %>%
@@ -21,11 +21,17 @@ dssat_get_daymet <- function(x,
                  snap = "out") %>%
     as('SpatialPolygons') %>%
     sf::st_as_sf() %>%
-    sf::st_transform("+proj=longlat +datum=WGS84")
+    sf::st_transform(4326)
   
   suppressMessages({
     tiles %<>%
-      dplyr::filter(sf::st_intersects(tiles,x, sparse = F)[,1])  %>%
+      dplyr::filter(
+        sf::st_intersects(
+          tiles,
+          x,
+          sparse = F) %>%
+          apply(1, any)
+      )  %>%
       dplyr::mutate(tile = 1:n())
   })
   
@@ -68,22 +74,6 @@ dssat_get_daymet <- function(x,
                   stringr::str_c("MULTI",geoms_char)
   ) %>%
     unique()
-  
-  suppressWarnings({
-    sub_geoms <- tiles %>%
-      sf::st_intersection(x) %>%
-      dplyr::filter(sf::st_geometry_type(geoms) %in% geoms_char) %>%
-      sf::st_as_sf() %>%
-      sf::st_cast() %>%
-      as.data.frame() %>%
-      dplyr::group_by(tile) %>%
-      dplyr::summarise(geometry = sf::st_combine(geometry))
-  })
-    
-  daymet$geometry <- sub_geoms$geometry
-  
-  daymet %<>%
-    dplyr::select(-tile)
 
   class(daymet) <- c(class(daymet),"weather")
   

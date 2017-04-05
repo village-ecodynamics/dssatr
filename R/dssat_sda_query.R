@@ -1,10 +1,12 @@
-SDA_query <- function (q) 
+dssat_sda_query <- function (q) 
 {
   if (!requireNamespace("httr", quietly = TRUE) |
       !requireNamespace("jsonlite", quietly = TRUE) |
       !requireNamespace("readr", quietly = TRUE)) 
     stop("please install the `httr`, `jsonlite`, and `readr` packages", 
          call. = FALSE)
+  
+  
   
   df <- httr::POST(url = "https://sdmdataaccess.sc.egov.usda.gov/tabular/post.rest", 
                    body = list(query = q, format = "xml") %>%
@@ -17,8 +19,10 @@ SDA_query <- function (q)
   
   df <- df[-1,]
   
+  parse_guess <- readr::parse_guess
+  
   df %<>%
-    dplyr::mutate_all(.funs = funs(parse_guess))
+    dplyr::mutate_all(.funs = dplyr::funs(parse_guess))
   
   # df <- httr::POST(url = "https://sdmdataaccess.sc.egov.usda.gov/tabular/post.rest", 
   #            body = list(query = q, format = "json+columnname") %>%

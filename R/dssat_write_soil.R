@@ -1,8 +1,16 @@
 dssat_write_soil <- function(soil,
-                             output.dir = "."){
+                             output.dir = ".",
+                             append = FALSE){
+  
+  if(!inherits(soil,
+               what = "soil"))
+    stop("dssat_write_soil() requires an S3 object of class 'soil' from the dssatr library.")
+  
+  if(!append)
+    unlink(stringr::str_c(output.dir,"/soil.sol"))
   
   soil$components %<>%
-    dplyr::mutate(ID_SOIL = sprintf("%010d",ID_SOIL),
+    dplyr::mutate(ID_SOIL = sprintf("%010s",ID_SOIL),
                   SLSOURCE = format(strtrim(SLSOURCE,width=11), width=11),
                   SLTX = format("", width=5),
                   SLDP = format(SLDP, width=5, digits=0),
@@ -24,7 +32,7 @@ dssat_write_soil <- function(soil,
                   SMKE = format(-99, width=5)
     )
   DSSAT.soil.series <- soil$components %>%
-    ungroup() %>%
+    dplyr::ungroup() %>%
     dplyr::select(ID_SOIL,
                   SLSOURCE,
                   SLTX,
@@ -93,38 +101,38 @@ dssat_write_soil <- function(soil,
                   SLEC = format(round(SLEC, digits=1), width=5, digits=1, nsmall=1))
   
   DSSAT.soil.horizons <- soil$horizons %>%
-    ungroup() %>%
+    dplyr::ungroup() %>%
     dplyr::select(SLB,
-                                    SLMH,
-                                    SLLL,
-                                    SDUL,
-                                    SSAT,
-                                    SRGF,
-                                    SSKS,
-                                    SBDM,
-                                    SLOC,
-                                    SLCL,
-                                    SLSI,
-                                    SLCF,
-                                    SLNI,
-                                    SLHW,
-                                    SLHB,
-                                    SCEC,
-                                    SLPX,
-                                    SLPT,
-                                    SLPO,
-                                    SLCA,
-                                    SLAL,
-                                    SLFE,
-                                    SLMN,
-                                    SLBS,
-                                    SLPA,
-                                    SLPB,
-                                    SLKE,
-                                    SLMG,
-                                    SLNA,
-                                    SLSU,
-                                    SLEC)
+                  SLMH,
+                  SLLL,
+                  SDUL,
+                  SSAT,
+                  SRGF,
+                  SSKS,
+                  SBDM,
+                  SLOC,
+                  SLCL,
+                  SLSI,
+                  SLCF,
+                  SLNI,
+                  SLHW,
+                  SLHB,
+                  SCEC,
+                  SLPX,
+                  SLPT,
+                  SLPO,
+                  SLCA,
+                  SLAL,
+                  SLFE,
+                  SLMN,
+                  SLBS,
+                  SLPA,
+                  SLPB,
+                  SLKE,
+                  SLMG,
+                  SLNA,
+                  SLSU,
+                  SLEC)
   DSSAT.soil.horizons <- gsub(" NA", "-99", as.matrix(DSSAT.soil.horizons))
   DSSAT.soil.horizons <- gsub("NA ", "-99", as.matrix(DSSAT.soil.horizons))
   DSSAT.soil.horizons <- as.data.frame(DSSAT.soil.horizons, stringsAsFactors=F)
@@ -134,10 +142,10 @@ dssat_write_soil <- function(soil,
   #                  open = "wt")
   # close(fileConn)
   
-
+  
   readr::write_lines(x = c(stringr::str_c("! Component-wise soils data for the study area. ",
-                                  nrow(soil$components),
-                                  " unique major components."),
+                                          nrow(soil$components),
+                                          " unique major components."),
                            ""),
                      path = stringr::str_c(output.dir,"/soil.sol"),
                      append = TRUE)
@@ -166,7 +174,7 @@ dssat_write_soil <- function(soil,
              collapse='')
     })
     
-
+    
     readr::write_lines(x = c(header1,
                              header2,
                              data2,
