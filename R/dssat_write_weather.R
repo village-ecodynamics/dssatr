@@ -1,6 +1,10 @@
 dssat_write_weather <- function(weather,
                                 output.dir = "."){
   
+  dir.create(output.dir,
+             showWarnings = FALSE,
+             recursive = TRUE)
+  
   data(daymet)
   
   weather %>%

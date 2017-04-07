@@ -44,11 +44,11 @@ aoi <- sf::read_sf("/Users/bocinsky/IMPORTANT/CCAC/INSTITUTE/PROJECTS/PFP/DATA/C
 
 ssurgo.out <- aoi %>%
   dssatr:::dssat_get_ssurgo() %T>%
-  dssatr:::dssat_write_soil(output.dir = output.dir)
+  dssatr:::dssat_write_soil(output.dir = paste0(output.dir, "/dssat_run"))
 
 daymet.out <- aoi %>%
   dssatr:::dssat_get_daymet() %T>%
-  dssatr:::dssat_write_weather(output.dir = output.dir)
+  dssatr:::dssat_write_weather(output.dir = paste0(output.dir, "/dssat_run/WEATHER"))
 
 
 

@@ -83,7 +83,9 @@ dssat_get_ssurgo <- function(x){
                   SLDR = (dssat_drainage_classes$SLDR)[match(drainagecl,dssat_drainage_classes$`Drainage Class`)],
                   
                   # Runoff potential after DSSAT 4.5 manual Vol. 2, Section 1.4.3.2, Table 2
+                  runoff = ifelse(is.na(runoff), "", runoff),
                   SLRO = (dssat_runoff_potential$SLRO)[match(runoff,dssat_runoff_potential$`Runoff Potential`)],
+
                   
                   SLNF = 1,
                   SLPF = 1,
@@ -189,7 +191,7 @@ dssat_get_ssurgo <- function(x){
               components = component,
               horizons = horizon)
   
-  class(out) <- c(class(out), "soil")
+  class(out) <- cs(class(out), "soil")
   
   return(out)
 }
