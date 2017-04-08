@@ -5,7 +5,7 @@ dssat_write_weather <- function(weather,
              showWarnings = FALSE,
              recursive = TRUE)
   
-  data(daymet)
+  # data(dssat_daymet)
   
   weather %>%
     purrr::by_row(function(x){

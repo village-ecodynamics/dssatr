@@ -6,17 +6,17 @@ dssat_get_daymet <- function(x,
                                       "srad",
                                       "dayl")){
   
-  data(daymet)
+  data(dssat_daymet_tiles)
   
   x %<>% 
     sf::st_transform(4326)
   
   x.sp <- x %>%
-    sf::st_transform(raster::projection(daymet)) %>%
+    sf::st_transform(raster::projection(dssat_daymet_tiles)) %>%
     as("Spatial") %>%
     FedData::polygon_from_extent()
   
-  tiles <- daymet %>%
+  tiles <- dssat_daymet_tiles %>%
     raster::crop(x.sp,
                  snap = "out") %>%
     as('SpatialPolygons') %>%

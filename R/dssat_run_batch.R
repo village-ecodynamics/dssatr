@@ -2,8 +2,8 @@ dssat_run_batch <- function(name,
                       cultivars = dssat_read_cultigen("~/DSSAT46/Genotype/MZCER046.CUL"),
                       weather,
                       soil,
-                      start.day,
-                      dssat.dir){
+                      start.day = "81001",
+                      dssat.dir = "./dssatr test/OUTPUT/dssat_run/"){
   
   # Get a geometric representation of soil/weather combinations
   suppressWarnings({
@@ -108,7 +108,6 @@ dssat_run_batch <- function(name,
                    fields,
                    "")
   
-  start.day <- 81001
   ## INITIAL CONDITIONS ##
   initial.cond.lines <- c("*INITIAL CONDITIONS",
                           "@C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME",
@@ -125,7 +124,7 @@ dssat_run_batch <- function(name,
   ## PLANTING DETAILS ##
   planting.details.lines <- c("*PLANTING DETAILS",
                               "@P PDATE EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL                        PLNAME",
-                              paste(" 1 ",81136,"   -99   0.5   0.5     S     H   100   -99    15   -99   -99   -99     4     0                        -99",sep=''),
+                              paste(" 1 ","81136","   -99   0.5   0.5     S     H   100   -99    15   -99   -99   -99     4     0                        -99",sep=''),
                               "")
   
   ## SIMULATION CONTROLS ##
@@ -177,7 +176,7 @@ dssat_run_batch <- function(name,
     dssatr:::dssat_write_soil(output.dir = dssat.dir)
   
   weather %>%
-    dssat_write_weather(output.dir = paste0(dssat.dir, "/WEATHER"))
+    dssatr:::dssat_write_weather(output.dir = paste0(dssat.dir, "/WEATHER"))
   
   currentwd <- getwd()
   setwd(paste0(dssat.dir,"/"))
@@ -190,7 +189,7 @@ dssat_run_batch <- function(name,
   )
   setwd(currentwd)
   
-  summary_out <- dssat_read_summary_out(paste0(dssat.dir,"/Summary.OUT")) %>%
+  summary_out <- dssatr:::dssat_read_summary_out(paste0(dssat.dir,"/Summary.OUT")) %>%
     dplyr::select(TRNO,
                   SDAT,
                   HWAM) %>%

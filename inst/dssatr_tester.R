@@ -12,7 +12,7 @@ dir.create(testDir,
 
 # Extract data for the Village Ecodynamics Project "VEPIIN" study area:
 # http://village.anth.wsu.edu
-data(mvnp)
+# data(mvnp)
 
 output.dir <- stringr::str_c(testDir,"/OUTPUT") %T>%
   dir.create(showWarnings = F,
@@ -43,12 +43,10 @@ aoi <- sf::read_sf("/Users/bocinsky/IMPORTANT/CCAC/INSTITUTE/PROJECTS/PFP/DATA/C
 #   sf::st_as_text()
 
 ssurgo.out <- aoi %>%
-  dssatr:::dssat_get_ssurgo() %T>%
-  dssatr:::dssat_write_soil(output.dir = paste0(output.dir, "/dssat_run"))
+  dssatr:::dssat_get_ssurgo()
 
 daymet.out <- aoi %>%
-  dssatr:::dssat_get_daymet() %T>%
-  dssatr:::dssat_write_weather(output.dir = paste0(output.dir, "/dssat_run/WEATHER"))
+  dssatr:::dssat_get_daymet()
 
 
 
