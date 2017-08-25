@@ -2,8 +2,8 @@ dssat_run_batch <- function(name,
                       cultivars = dssat_read_cultigen("~/DSSAT46/Genotype/MZCER046.CUL"),
                       weather,
                       soil,
-                      start.day = "81001",
-                      dssat.dir = "./dssatr test/OUTPUT/dssat_run/"){
+                      start_day = "81001",
+                      dssat_dir = "./dssatr test/OUTPUT/dssat_run/"){
   
   # Get a geometric representation of soil/weather combinations
   suppressWarnings({
@@ -111,7 +111,7 @@ dssat_run_batch <- function(name,
   ## INITIAL CONDITIONS ##
   initial.cond.lines <- c("*INITIAL CONDITIONS",
                           "@C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME",
-                          paste(" 1    MZ ",start.day,"   100     0     1     1   -99  1000    .8     0   100    15    -99",sep=''),
+                          paste(" 1    MZ ",start_day,"   100     0     1     1   -99  1000    .8     0   100    15    -99",sep=''),
                           "@C  ICBL  SH2O  SNH4  SNO3",
                           " 1     5    .3   -99   -99",
                           " 1    15    .3   -99   -99",
@@ -130,7 +130,7 @@ dssat_run_batch <- function(name,
   ## SIMULATION CONTROLS ##
   simulation.control.lines <- c("*SIMULATION CONTROLS",
                                 "@N GENERAL     NYERS NREPS START SDATE RSEED SNAME.................... SMODEL",
-                                paste0( " 1 GE          ",sprintf("%5d", 33),"     1     S ",start.day,"  0001 ","test" %>% stringr::str_pad(24, side = "right")," "," MZCER"),
+                                paste0( " 1 GE          ",sprintf("%5d", 33),"     1     S ",start_day,"  0001 ","test" %>% stringr::str_pad(24, side = "right")," "," MZCER"),
                                 "@N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2",
                                 " 1 OP              Y     N     N     N     N     N     N     N     M",
                                 "@N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL",
@@ -151,9 +151,9 @@ dssat_run_batch <- function(name,
                                   "@N HARVEST     HFRST HLAST HPCNP HPCNR",
                                   " 1 HA              0 82135   100     0")
   
-  dir.create(dssat.dir, recursive=T, showWarnings = F)
+  dir.create(dssat_dir, recursive=T, showWarnings = F)
   
-  fileConn<-file(paste0(dssat.dir,"/","test0000.MZX"), raw=T)
+  fileConn<-file(paste0(dssat_dir,"/","test0000.MZX"), raw=T)
   writeLines(as.character(c(header.lines,
                             treatment.lines,
                             cultivar.lines,
@@ -168,18 +168,18 @@ dssat_run_batch <- function(name,
   system2(command = "cp",
           args = c("-r",
                    "~/DSSAT46/BASE/*",
-                   shQuote(dssat.dir)
+                   shQuote(dssat_dir)
           )
   )
   
   soil %>%
-    dssatr:::dssat_write_soil(output.dir = dssat.dir)
+    dssatr:::dssat_write_soil(output.dir = dssat_dir)
   
   weather %>%
-    dssatr:::dssat_write_weather(output.dir = paste0(dssat.dir, "/WEATHER"))
+    dssatr:::dssat_write_weather(output.dir = paste0(dssat_dir, "/WEATHER"))
   
   currentwd <- getwd()
-  setwd(paste0(dssat.dir,"/"))
+  setwd(paste0(dssat_dir,"/"))
   system2(command = "./dscsm046.exe",
           args = c("A",
                    "test0000.MZX"),
@@ -189,7 +189,7 @@ dssat_run_batch <- function(name,
   )
   setwd(currentwd)
   
-  summary_out <- dssatr:::dssat_read_summary_out(paste0(dssat.dir,"/Summary.OUT")) %>%
+  summary_out <- dssatr:::dssat_read_summary_out(paste0(dssat_dir,"/Summary.OUT")) %>%
     dplyr::select(TRNO,
                   SDAT,
                   HWAM) %>%
