@@ -25,16 +25,21 @@ extraction.dir <- stringr::str_c(output.dir,"/DATA/EXTRACTIONS") %T>%
              recursive = T)
 
 # get point above Paul's Old Garden on the Crow Canyon campus
-aoi <- sf::st_point(c(-108.618642,37.355880))
-
-aoi <- sf::st_multipoint(matrix(c(-109.25,37.95556,-109.25,37.95555,-109.25,38.05,-109.25,38.15), nrow = 4, byrow = TRUE)) %>%
+aoi <- sf::st_point(c(-108.618642,37.355880)) %>%
   sf::st_as_text() %>%
-    sf::st_as_sfc(4326)
+  sf::st_as_sfc(4326)
 
-aoi <- sf::read_sf("/Users/bocinsky/IMPORTANT/CCAC/INSTITUTE/PROJECTS/PFP/DATA/CCAC.shp") %>%
-  dplyr::select(geometry) %>%
-  sf::st_union() %>%
-  sf::st_transform(4326)
+aoi <- sf::st_multipoint(
+  matrix(c(-109.25,37.95556,-109.25,37.95555,-109.25,38.05,-109.25,38.15),
+         nrow = 4,
+         byrow = TRUE)
+) %>%
+  sf::st_as_text() %>%
+  sf::st_as_sfc(4326)
+
+aoi <- dssat_ccac
+
+aoi <- dssat_mvnp
 
 # wkt_geom <- raster::extent(-110,-107,36,39) %>% 
 #   FedData::polygon_from_extent("+proj=longlat +datum=WGS84") %>%
@@ -48,7 +53,14 @@ ssurgo.out <- aoi %>%
 daymet.out <- aoi %>%
   dssatr:::dssat_get_daymet()
 
+weather <- daymet.out
+soil <- ssurgo.out
+cultivars <- dssatr:::dssat_read_cultigen("~/DSSAT46/Genotype/MZCER046.CUL")
+start.day <- "81001"
+dssat.dir <- "./dssatr test/OUTPUT/dssat_run/"
+name <- "test"
 
+dssat_run_batch()
 
 test <- ssurgo.out %$%
   mapunits %>%
@@ -62,7 +74,7 @@ test <- ssurgo.out %$%
                    by = "mukey") %>%
   dplyr::select(-mukey, -muname) %>%
   dplyr::distinct() %>%
-  tibble::as_tibble() %>%
+  # tibble::as_tibble() %>%
   sf::st_as_sf()
 
 cultivars = c("GF0001 Base Garst808-wh403")  

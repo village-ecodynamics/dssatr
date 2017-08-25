@@ -191,7 +191,7 @@ dssat_get_ssurgo <- function(x){
               components = component,
               horizons = horizon)
   
-  class(out) <- cs(class(out), "soil")
+  class(out) <- c(class(out), "soil")
   
   return(out)
 }

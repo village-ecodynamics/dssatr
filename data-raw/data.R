@@ -20,6 +20,15 @@ sf::st_write(dssat_mvnp,
 
 devtools::use_data(dssat_mvnp, overwrite = TRUE)
 
+
+## CCAC spatial polygon
+dssat_ccac <- sf::read_sf("./data-raw/CCAC.shp") %>%
+  dplyr::select(geometry) %>%
+  sf::st_union() %>%
+  sf::st_transform(4326)
+
+devtools::use_data(dssat_ccac, overwrite = TRUE)
+
 # DSSAT_GENERIC_SOILS_HORIZON_HYDRO.csv
 dssat_soil_hydrology <- readr::read_csv("./data-raw/dssat_generic_soils_horizon_hydro.csv")
 # devtools::use_data(dssat_soil_hydrology, overwrite = TRUE, internal = TRUE)
