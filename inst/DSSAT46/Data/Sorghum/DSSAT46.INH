@@ -1,0 +1,97 @@
+*EXP.DETAILS: ITHY8001SG ICRISAT ALFISOL N 1980 EXPT 80-1                            
+
+*FILES
+@N  EXP.DATA    AFILE        ADIR
+  1 EXP         ITHY8001.SGA C:\DSSAT46\Sorghum\                                                             
+@N  SPECIES     SPFILE       SPDIR
+  1 SPE         SGCER046.SPE C:\DSSAT46\GENOTYPE\                                                            
+@N  ECOTYPE     EFILE        EDIR
+  1 ECO         SGCER046.ECO C:\DSSAT46\GENOTYPE\                                                            
+@N  CULTIVAR    CFILE        CDIR
+  1 CUL         SGCER046.CUL C:\DSSAT46\GENOTYPE\                                                            
+@N  SOIL        SFILE        SDIR
+  1 SOIL        SOIL.SOL     C:\DSSAT46\SOIL\                                                                
+@N  WEATHER     WFILE        WDIR
+  1 WEATH       ITHY8001.WTH C:\DSSAT46\Weather\                                                             
+
+*SIMULATION CONTROL
+@N  GENERAL     NYERS NREPS START   SDATE RSEED SNAME.................... MODEL...
+  1 GE              1     1     S 1980165  2150 ICRISAT Alfisol N 1980 E  SGCER046
+@N  OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
+  1 OP              Y     Y     N     N     N     N     N     N     M
+@N  METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT SOMDY MESEV MESOL
+  1 ME              M     M     E     R     S     C     R     1     P     S     2
+@N  MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
+  1 MA              R     N     R     N     M
+@N  OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT  LONG CHOUT OPOUT
+  1 OU              N     Y     Y     1     Y     N     Y     Y     N     N     Y     N     N
+
+!AUTOMATIC MANAGEM
+@N  PLANTING      PFRST   PLAST PH2OL PH2OU PH2OD PSTMX PSTMN
+  1 PL          1980162 1980176   40.  100.   30.   40.   10.
+@N  IRRIGATION  IMDEP ITHRL ITHRU IROFF IMETH IRAMT IREFF
+  1 IR            30.   50.  100. GS000 IR001  10.0 1.000
+@N  NITROGEN    NMDEP NMTHR NAMNT NCODE NAOFF
+  1 NI            30.   50.   25. FE001 GS000
+@N  RESIDUES    RIPCN RTIME RIDEP
+  1 RE           100.     1   20.
+@N  HARVEST     HFRST   HLAST HPCNP HRCNR
+  1 HA              0 1981168  100.    0.
+
+*TREATMENTS
+@N   R O C TNAME....................  CU  FL  SA  IC  MP  MI  MF  MR  MC  MT  ME  MH  SM
+  3  1 0 0 80 kg Urea-N Split Applic   1   1   0   2   1   0   3   0   0   0   0   0   1
+
+*CULTIVARS
+@C  CR INGENO CNAME
+  1 SG IB0026 CSH-1           
+
+*FIELDS
+@L  ID_FIELD WSTA....  FLSA  FLOB  FLDT  FLDD  FLDS  FLST SLTX   SLDP ID_SOIL
+  1 ITHY0001 ITHY8001   0.0    0. DR000    0.  100. 00000 -99    172. IBSG910085
+@L             XCRD            YCRD      ELEV              AREA  SLEN  FLWR  SLAS PRMGT
+  1         0.00000         0.00000      0.00               1.0  100.   1.0   0.0 FH101   -99
+
+*INITIAL CONDITIONS
+@C  PCR     ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID
+  2 SG    1980165   500     0  1.00  1.00   0.0  1300  0.50  0.00  100.   10.
+@C   ICBL  SH2O  SNH4  SNO3
+  2    5. 0.060   2.5   1.8
+  2   15. 0.060   2.5   1.8
+  2   22. 0.060   2.5   1.8
+  2   37. 0.195   3.0   4.5
+  2   52. 0.195   3.0   4.5
+  2   67. 0.210   3.5   5.0
+  2   82. 0.210   3.5   5.0
+  2  112. 0.200   2.0   2.0
+  2  142. 0.200   1.0   0.7
+  2  172. 0.200   1.0   0.6
+
+*PLANTING DETAILS
+@P    PDATE   EDATE  PPOP  PPOE  PLME  PLDS  PLRS  PLRD  PLDP  PLWT  PAGE  PENV  PLPH  SPRL
+  1 1980169     -99  18.0  18.0     S     R   45.    0.   5.0  -99.  -99. -99.0 -99.0   0.0
+
+*IRRIGATION
+@I   IEFF  IDEP  ITHR  IEPT  IOFF  IAME  IAMT
+  0 1.000    0.    0.  -99. GS000 IR001   0.0
+@I    IDATE  IROP IRVAL
+
+*FERTILIZERS
+@F    FDATE  FMCD  FACD  FDEP  FAMN  FAMP  FAMK  FAMC  FAMO  FOCD
+  3 1980185 FE005 AP002    5.   40.  -99.  -99.  -99.  -99.   -99
+  3 1980198 FE005 AP002    5.   40.  -99.  -99.  -99.  -99.   -99
+
+*RESIDUES
+@R    RDATE  RCOD  RAMT  RESN  RESP  RESK  RINP  RDEP  RMET
+
+*CHEMICALS
+@C    CDATE CHCOD CHAMT  CHME CHDEP   CHT
+
+*TILLAGE
+@T    TDATE TIMPL  TDEP
+
+*ENVIRONMENT
+@E    ODATE  EDAY  ERAD  EMAX  EMIN ERAIN  ECO2  EDEW EWIND
+
+*HARVEST
+@H    HDATE  HSTG  HCOM HSIZE   HPC  HBPC
