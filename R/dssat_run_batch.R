@@ -1,5 +1,18 @@
+#' Run a batch spatial dssat analysis from a 
+#' cultigen, weather, and soil object.
+#'
+#' @param name 
+#' @param cultivars 
+#' @param weather 
+#' @param soil 
+#' @param earliest_planting_doy 
+#' @param latest_planting_doy 
+#' @param output_dir 
+#'
+#' @return A list containing field, cultivar, and yield information.
+#' @export
 dssat_run_batch <- function(name,
-                      cultivars = dssatr:::dssat_read_cultigen("~/DSSAT46/Genotype/MZCER046.CUL") %>%
+                      cultivars = dssat_read_cultigen("~/DSSAT46/Genotype/MZCER046.CUL") %>%
                         dplyr::filter(`@VAR#` %in% c("AC0001",
                                                      "GF0001",
                                                      "GF0101",
@@ -18,11 +31,11 @@ dssat_run_batch <- function(name,
   
   # Write the soil file to the output directory (SOIL.SOL)
   soil %>%
-    dssatr:::dssat_write_soil(output_dir = output_dir)
+    dssat_write_soil(output_dir = output_dir)
   
   # Write the weather files to the output directory (*.WTH files)
   weather %>%
-    dssatr:::dssat_write_weather(output_dir = output_dir)
+    dssat_write_weather(output_dir = output_dir)
   
   # Get the years of the simpulation from the weather file
   years <- weather$weather[[1]]$date %>%
@@ -233,7 +246,7 @@ dssat_run_batch <- function(name,
       )
       setwd(currentwd)
 
-      summary_out <- dssatr:::dssat_read_summary_out(paste0(output_dir,"/Summary.OUT")) %>%
+      summary_out <- dssat_read_summary_out(paste0(output_dir,"/Summary.OUT")) %>%
         dplyr::select(TRNO,
                       SDAT,
                       HWAM) %>%

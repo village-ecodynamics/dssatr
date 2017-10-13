@@ -3,7 +3,6 @@ library(dssatr)
 library(magrittr)
 library(units)
 
-
 # Set a directory for testing
 testDir <- "./dssatr test"
 
@@ -15,7 +14,7 @@ dir.create(testDir,
 # http://village.anth.wsu.edu
 # data(mvnp)
 
-output.dir <- stringr::str_c(testDir,"/OUTPUT") %T>%
+output.dir <- stringr::str_c(testDir,"/OUTPUT/dssat_run") %T>%
   dir.create(showWarnings = F,
              recursive = T)
 raw.dir <- stringr::str_c(output.dir,"/DATA/RAW") %T>%
@@ -52,7 +51,7 @@ ssurgo.out <- aoi %>%
   dssatr:::dssat_get_ssurgo()
 
 daymet.out <- aoi %>%
-  dssatr:::dssat_get_daymet(years = 2009:2012)
+  dssatr:::dssat_get_daymet(years = 2010:2013)
 
 weather <- daymet.out
 soil <- ssurgo.out
@@ -66,15 +65,33 @@ name <- "test"
 out <- dssat_run_batch(name = "test",
                        weather = daymet.out,
                        soil = ssurgo.out,
+                       cultivars = dssatr:::dssat_read_cultigen("~/DSSAT46/Genotype/MZCER046.CUL") %>%
+                         dplyr::filter(`@VAR#` == "AC0001"),
                        output_dir = "./dssatr test/OUTPUT/dssat_run/")
 
 test <- out$yields %>%
-  dplyr::group_by(field, cultivar) %>%
-  dplyr::summarise(yield = mean(yield)) %>%
-  dplyr::right_join(out$fields) %>%
-  sf::st_sf()
+  # dplyr::group_by(field, cultivar) %>%
+  # dplyr::summarise(yield = mean(yield)) %>%
+  dplyr::left_join(out$fields) %>%
+  dplyr::select(year:`Component percent`,
+                -ID_SOIL) %>%
 
-plot(test["yield"])
+  dplyr::group_by(tile,mukey,year) %>%
+  dplyr::arrange(year,tile,mukey) %>%
+  dplyr::summarise(yield = weighted.mean(x = yield,
+                                         w = `Component percent`)) %>%
+  dplyr::ungroup() %>%
+  dplyr::arrange(year,tile,mukey) %>%
+  dplyr::left_join(out$fields %>%
+                     dplyr::select(tile, mukey) %>% 
+                     dplyr::distinct()) %>% 
+  sf::st_sf()
+  
+  test.plot <- test %>%
+    dplyr::filter(year == 2010) %>%
+    dplyr::select(yield)
+plot(test.plot,
+     ncol = 1000)
 
 test <- ssurgo.out %$%
   mapunits %>%
