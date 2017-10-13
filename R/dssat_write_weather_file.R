@@ -5,10 +5,10 @@ dssat_write_weather_file <- function(coords,
                                      RAIN,
                                      SRAD,
                                      file.name = "NAMELESS",
-                                     output.dir = "."){
+                                     output_dir = "."){
   
   file.name <- paste0(sprintf("%-8s", file.name))
-  out.file <- paste0(output.dir,"/",file.name,".WTH")
+  out.file <- paste0(output_dir,"/",file.name,".WTH")
   
   date <- format(date,"%y%j")
   

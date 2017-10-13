@@ -6,12 +6,13 @@ dssat_get_daymet <- function(x,
                                       "srad",
                                       "dayl")){
   
-  daymet <- dssatr::get_daymet(x,
+  dssatr::get_daymet(x,
                                years,
                                vars) %>%
     dplyr::mutate(weather = purrr::map(weather, .f = function(x){
       x %>%
-        dplyr::mutate(`srad` = (`srad` * (`dayl`/with(ud_units, d)) / 1000000) %>% set_units(parse_unit("MJ m-2 day-1"))) %>%
+        dplyr::mutate(`srad` = (units::set_units(`srad`,units::parse_unit("J day-1 m-2")) * units::set_units(`dayl`,d)) %>% 
+                        units::set_units(units::parse_unit("MJ m-2"))) %>%
         dplyr::select(-dayl) %>%
         dplyr::rename(RAIN = prcp,
                       SRAD = srad,
@@ -19,6 +20,4 @@ dssat_get_daymet <- function(x,
                       TMIN = tmin)
     })) %>%
     dplyr::mutate(tile = 1:n())
-  
-  return(daymet)
 }

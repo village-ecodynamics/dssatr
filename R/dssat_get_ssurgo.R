@@ -1,7 +1,9 @@
 dssat_get_ssurgo <- function(x){
   
   x %<>% 
-    sf::st_transform(4326)
+    sf::st_transform(4326) %>%
+    sf::st_geometry() %>%
+    sf::st_sf()
   
   wkt_geom <- x %>%
     sf::st_union() %>%
@@ -186,6 +188,8 @@ dssat_get_ssurgo <- function(x){
   component %<>%
     dplyr::mutate(SLDP = max_depth_vect(ID_SOIL))
   
+  mapunit %<>%
+    sf::st_intersection(x)
   
   out <- list(mapunits = mapunit,
               components = component,

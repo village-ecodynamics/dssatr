@@ -106,7 +106,7 @@ get_daymet <- function(x,
       out[indices] %<>%
         purrr::map2(.y = out_units[indices],
                     .f = function(x, y){
-                      x * with(ud_units, eval(parse(text = y)))
+                      x * with(units::ud_units, eval(parse(text = y)))
                     }) %>%
         tibble::as_tibble()
       

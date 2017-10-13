@@ -1,5 +1,5 @@
 dssat_write_soil <- function(soil,
-                             output.dir = ".",
+                             output_dir = ".",
                              append = FALSE){
   
   if(!inherits(soil,
@@ -7,8 +7,14 @@ dssat_write_soil <- function(soil,
     stop("dssat_write_soil() requires an S3 object of class 'soil' from the dssatr library.")
   
   if(!append)
-    unlink(stringr::str_c(output.dir,"/soil.sol"))
+    unlink(stringr::str_c(output_dir,"/soil.sol"))
   
+  if(!file.exists(stringr::str_c(output_dir,"/soil.sol"))){
+    fileConn <- file(stringr::str_c(output_dir,"/soil.sol"),
+                     open = "wt")
+    close(fileConn)
+  }
+
   soil$components %<>%
     dplyr::mutate(ID_SOIL = sprintf("%010s",ID_SOIL),
                   SLSOURCE = format(strtrim(SLSOURCE,width=11), width=11),
@@ -138,16 +144,11 @@ dssat_write_soil <- function(soil,
   DSSAT.soil.horizons <- as.data.frame(DSSAT.soil.horizons, stringsAsFactors=F)
   DSSAT.soil.horizons.names <- format(names(DSSAT.soil.horizons),width=5, justify="right")
   
-  # fileConn <- file(stringr::str_c(output.dir,"/soil.sol"),
-  #                  open = "wt")
-  # close(fileConn)
-  
-  
   readr::write_lines(x = c(stringr::str_c("! Component-wise soils data for the study area. ",
                                           nrow(soil$components),
                                           " unique major components."),
                            ""),
-                     path = stringr::str_c(output.dir,"/soil.sol"),
+                     path = stringr::str_c(output_dir,"/soil.sol"),
                      append = TRUE)
   
   for(i in 1:nrow(soil$components)){
@@ -184,9 +185,9 @@ dssat_write_soil <- function(soil,
                              data4,
                              blank,
                              blank),
-                       path = stringr::str_c(output.dir,"/soil.sol"),
+                       path = stringr::str_c(output_dir,"/soil.sol"),
                        append = T)
   }
   
-  return(stringr::str_c(output.dir,"/soil.sol"))
+  return(stringr::str_c(output_dir,"/soil.sol"))
 }

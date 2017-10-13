@@ -1,6 +1,7 @@
 # dssatr tester
 library(dssatr)
 library(magrittr)
+library(units)
 
 
 # Set a directory for testing
@@ -39,7 +40,7 @@ aoi <- sf::st_multipoint(
 
 aoi <- dssat_ccac
 
-aoi <- dssat_mvnp
+# aoi <- dssat_mvnp
 
 # wkt_geom <- raster::extent(-110,-107,36,39) %>% 
 #   FedData::polygon_from_extent("+proj=longlat +datum=WGS84") %>%
@@ -51,16 +52,29 @@ ssurgo.out <- aoi %>%
   dssatr:::dssat_get_ssurgo()
 
 daymet.out <- aoi %>%
-  dssatr:::dssat_get_daymet()
+  dssatr:::dssat_get_daymet(years = 2009:2012)
 
 weather <- daymet.out
 soil <- ssurgo.out
-cultivars <- dssatr:::dssat_read_cultigen("~/DSSAT46/Genotype/MZCER046.CUL")
-start.day <- "81001"
-dssat.dir <- "./dssatr test/OUTPUT/dssat_run/"
+cultivars <- dssatr:::dssat_read_cultigen("~/DSSAT46/Genotype/MZCER046.CUL") %>%
+  dplyr::filter(`@VAR#` == "AC0001")
+earliest_planting_doy = 136
+latest_planting_doy = 167
+output_dir <- "./dssatr test/OUTPUT/dssat_run/"
 name <- "test"
 
-dssat_run_batch()
+out <- dssat_run_batch(name = "test",
+                       weather = daymet.out,
+                       soil = ssurgo.out,
+                       output_dir = "./dssatr test/OUTPUT/dssat_run/")
+
+test <- out$yields %>%
+  dplyr::group_by(field, cultivar) %>%
+  dplyr::summarise(yield = mean(yield)) %>%
+  dplyr::right_join(out$fields) %>%
+  sf::st_sf()
+
+plot(test["yield"])
 
 test <- ssurgo.out %$%
   mapunits %>%
