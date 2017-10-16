@@ -55,9 +55,11 @@ dssat_get_ssurgo <- function(x){
       sf::st_cast()
   })
   
-  component <- stringr::str_c("SELECT mukey, cokey, compname, albedodry_r, comppct_r, taxclname, taxpartsize, drainagecl, runoff
-                     FROM component
-                 WHERE mukey IN (",
+  # 
+  
+  component <- stringr::str_c("SELECT mukey, cokey, compname, albedodry_r, comppct_r, taxclname, taxpartsize, drainagecl, runoff 
+                              FROM component 
+                              WHERE mukey IN (",
                               stringr::str_c(mapunit$mukey %>% unique(),
                                              collapse = ","),
                               ")") %>%
@@ -82,11 +84,11 @@ dssat_get_ssurgo <- function(x){
                   SLU1 = NA,
                   
                   # Drainage class after DSSAT 4.5 manual Vol. 2, Section 1.4.3.2, Table 2
-                  SLDR = (dssat_drainage_classes$SLDR)[match(drainagecl,dssat_drainage_classes$`Drainage Class`)],
+                  SLDR = (dssat_drainage_classes$SLDR)[match(drainagecl, dssat_drainage_classes$`Drainage Class`)],
                   
                   # Runoff potential after DSSAT 4.5 manual Vol. 2, Section 1.4.3.2, Table 2
                   runoff = ifelse(is.na(runoff), "", runoff),
-                  SLRO = (dssat_runoff_potential$SLRO)[match(runoff,dssat_runoff_potential$`Runoff Potential`)],
+                  SLRO = ( dssat_runoff_potential$SLRO)[match(runoff, dssat_runoff_potential$`Runoff Potential`)],
 
                   
                   SLNF = 1,

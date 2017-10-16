@@ -37,9 +37,9 @@ aoi <- sf::st_multipoint(
   sf::st_as_text() %>%
   sf::st_as_sfc(4326)
 
-aoi <- dssat_ccac
+# aoi <- dssat_ccac
 
-# aoi <- dssat_mvnp
+aoi <- dssat_mvnp
 
 # wkt_geom <- raster::extent(-110,-107,36,39) %>% 
 #   FedData::polygon_from_extent("+proj=longlat +datum=WGS84") %>%
@@ -51,7 +51,7 @@ ssurgo.out <- aoi %>%
   dssatr:::dssat_get_ssurgo()
 
 daymet.out <- aoi %>%
-  dssatr:::dssat_get_daymet(years = 2010:2013)
+  dssatr:::dssat_get_daymet(years = 2010:2011)
 
 weather <- daymet.out
 soil <- ssurgo.out
@@ -62,12 +62,16 @@ latest_planting_doy = 167
 output_dir <- "./dssatr test/OUTPUT/dssat_run/"
 name <- "test"
 
-out <- dssat_run_batch(name = "test",
-                       weather = daymet.out,
-                       soil = ssurgo.out,
-                       cultivars = dssatr:::dssat_read_cultigen("~/DSSAT46/Genotype/MZCER046.CUL") %>%
-                         dplyr::filter(`@VAR#` == "AC0001"),
-                       output_dir = "./dssatr test/OUTPUT/dssat_run/")
+system.time({
+  out <- dssat_run_batch(name = "test",
+                         weather = daymet.out,
+                         soil = ssurgo.out,
+                         cultivars = dssatr:::dssat_read_cultigen("~/DSSAT46/Genotype/MZCER046.CUL") %>%
+                           dplyr::filter(`@VAR#` == "AC0001"),
+                         output_dir = "./dssatr test/OUTPUT/dssat_run/")
+  
+})
+
 
 test <- out$yields %>%
   # dplyr::group_by(field, cultivar) %>%

@@ -29,7 +29,7 @@ dssat_run_batch <- function(name,
   # Transform weather to WGS84
   weather %<>% sf::st_transform(crs = 4326)
   
-  # Write the soil file to the output directory (SOIL.SOL)
+  # Write the soil file to the output directory (soil.sol)
   soil %>%
     dssat_write_soil(output_dir = output_dir)
   
@@ -62,8 +62,8 @@ dssat_run_batch <- function(name,
       dplyr::arrange(tile,
                      mukey,
                      -`Component percent`,
-                     ID_SOIL) %>%
-      na.omit()
+                     ID_SOIL) #%>%
+      #na.omit()
   })
   
   cultivars <- cultivars %>%
