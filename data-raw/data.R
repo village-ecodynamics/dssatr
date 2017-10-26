@@ -1,5 +1,6 @@
 library(FedData)
 library(sf)
+library(magrittr)
 
 ##### MVNP Spatial Polygon
 
@@ -29,6 +30,28 @@ dssat_ccac <- sf::read_sf("./data-raw/CCAC.shp") %>%
 
 devtools::use_data(dssat_ccac, overwrite = TRUE)
 
+## Hopi reservation
+## Load spatial polygon for the boundary of Mesa Verde National Park in southwestern Colorado:
+dir.create("./data-raw/Hopi", showWarnings = F, recursive = T)
+# Get contempory Hopi boundary from US Census TIGER database
+FedData::download_data("https://www2.census.gov/geo/tiger/TIGER2017/AIANNH/tl_2017_us_aiannh.zip",
+                       destdir = "./data-raw/Hopi/")
+unzip("./data-raw/Hopi/tl_2017_us_aiannh.zip", exdir = "./data-raw/Hopi/tl_2017_us_aiannh")
+dssat_hopi <- sf::st_read("./data-raw/Hopi/tl_2017_us_aiannh/tl_2017_us_aiannh.shp") %>%
+  dplyr::filter(NAME == "Hopi") %>%
+  sf::st_transform(4326) %>%
+  sf::st_union() %>%
+  sf::st_sf(geometry = .) %>%
+  dplyr::mutate(Name = "Modern")
+
+unlink("./data-raw/Hopi", recursive=T)
+
+sf::st_write(dssat_hopi,
+             dsn = "./data-raw/dssat_hopi.gpkg",
+             driver = "GPKG")
+
+devtools::use_data(dssat_hopi, overwrite = TRUE)
+
 # DSSAT_GENERIC_SOILS_HORIZON_HYDRO.csv
 dssat_soil_hydrology <- readr::read_csv("./data-raw/dssat_generic_soils_horizon_hydro.csv")
 # devtools::use_data(dssat_soil_hydrology, overwrite = TRUE, internal = TRUE)
@@ -57,7 +80,8 @@ devtools::use_data(dssat_soil_hydrology,
 
 dir.create("./data-raw/daymet", showWarnings = F, recursive = T)
 # download shapefile directory
-FedData::download_data("https://thredds.daac.ornl.gov/thredds/fileServer/ornldaac/1343/daymet_v3_prcp_annttl_1980_na.nc4", destdir="./data-raw/daymet")
+FedData::download_data("https://thredds.daac.ornl.gov/thredds/fileServer/ornldaac/1343/daymet_v3_prcp_annttl_1980_na.nc4",
+                       destdir="./data-raw/daymet")
 # read shapefile
 dssat_daymet_tiles <- raster::raster("./data-raw/daymet/daymet_v3_prcp_annttl_1980_na.nc4") %>%
   raster:::readAll() %>%

@@ -32,7 +32,7 @@ dssat_get_ssurgo <- function(x){
           SELECT * from SDA_Get_Mukey_from_intersection_with_WktWgs84('",.,"')
           )"
     ) %>%
-    dssat_sda_query() %>%
+    dssatr:::dssat_sda_query() %>%
     dplyr::mutate(mukey = as.character(mukey),
                   geom = sf::st_as_sfc(geom, 
                                        crs = 4326)) %>%
@@ -63,8 +63,7 @@ dssat_get_ssurgo <- function(x){
                               stringr::str_c(mapunit$mukey %>% unique(),
                                              collapse = ","),
                               ")") %>%
-    dssat_sda_query() %>%
-    dplyr::filter(!is.na(albedodry_r)) %>%
+    dssatr:::dssat_sda_query() %>%
     dplyr::arrange(cokey) %>%
     dplyr::mutate(mukey = as.character(mukey),
                   cokey = as.character(cokey),
@@ -84,11 +83,11 @@ dssat_get_ssurgo <- function(x){
                   SLU1 = NA,
                   
                   # Drainage class after DSSAT 4.5 manual Vol. 2, Section 1.4.3.2, Table 2
-                  SLDR = (dssat_drainage_classes$SLDR)[match(drainagecl, dssat_drainage_classes$`Drainage Class`)],
+                  SLDR = (dssatr:::dssat_drainage_classes$SLDR)[match(drainagecl, dssatr:::dssat_drainage_classes$`Drainage Class`)],
                   
                   # Runoff potential after DSSAT 4.5 manual Vol. 2, Section 1.4.3.2, Table 2
                   runoff = ifelse(is.na(runoff), "", runoff),
-                  SLRO = ( dssat_runoff_potential$SLRO)[match(runoff, dssat_runoff_potential$`Runoff Potential`)],
+                  SLRO = (dssatr:::dssat_runoff_potential$SLRO)[match(runoff, dssatr:::dssat_runoff_potential$`Runoff Potential`)],
 
                   
                   SLNF = 1,
@@ -102,7 +101,7 @@ dssat_get_ssurgo <- function(x){
   horizon <- stringr::str_c("SELECT *
                                   FROM chorizon
                                   WHERE cokey IN (", stringr::str_c(component$cokey, collapse = ","),")") %>%
-    dssat_sda_query() %>%
+    dssatr:::dssat_sda_query() %>%
     dplyr::arrange(cokey,
                    hzdepb_r) %>%
     dplyr::filter(!is.na(claytotal_r)) %>%
@@ -128,22 +127,35 @@ dssat_get_ssurgo <- function(x){
   )
   
   horizon %<>%
-    dplyr::mutate( cokey = as.character(cokey),
+    dplyr::mutate(cokey = as.character(cokey),
       SLB = hzdepb_r,
                    SLMH = NA,
                    
                    SLLL = wfifteenbar_r/100,
-                   SLLL = ifelse(is.na(SLLL), dssat_soil_hydrology$LL[match(TEXTURE,as.character(dssat_soil_hydrology$`SOIL CLASS`))], SLLL),
+                   SLLL = ifelse(is.na(SLLL),
+                                 dssatr:::dssat_soil_hydrology$LL[match(TEXTURE,
+                                                                        as.character(dssatr:::dssat_soil_hydrology$`SOIL CLASS`))],
+                                 SLLL),
                    
                    SDUL = wthirdbar_r/100,
-                   SDUL = ifelse(is.na(SDUL), dssat_soil_hydrology$DUL[match(TEXTURE,as.character(dssat_soil_hydrology$`SOIL CLASS`))], SDUL),
+                   SDUL = ifelse(is.na(SDUL),
+                                 dssatr:::dssat_soil_hydrology$DUL[match(TEXTURE,
+                                                                         as.character(dssatr:::dssat_soil_hydrology$`SOIL CLASS`))],
+                                 SDUL),
                    
                    SSAT = wsatiated_r/100,
-                   SSAT = ifelse(is.na(SSAT), dssat_soil_hydrology$SAT[match(TEXTURE,as.character(dssat_soil_hydrology$`SOIL CLASS`))], SSAT),
-                   SSAT = max(SSAT,SDUL),
+                   SSAT = ifelse(is.na(SSAT),
+                                 dssatr:::dssat_soil_hydrology$SAT[match(TEXTURE,
+                                                                         as.character(dssatr:::dssat_soil_hydrology$`SOIL CLASS`))],
+                                 SSAT),
+                   SSAT = max(SSAT,
+                              SDUL,
+                              na.rm = TRUE),
                    
                    SRGF = exp(-0.02 * ((hzdepb_r + hzdept_r) / 2)),
-                   SRGF = ifelse(hzdepb_r<=15, 1, SRGF),
+                   SRGF = ifelse(hzdepb_r<=15,
+                                 1,
+                                 SRGF),
                    
                    SSKS = ksat_r * (0.36),
                    SBDM = NA,

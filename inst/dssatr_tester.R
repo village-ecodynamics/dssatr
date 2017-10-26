@@ -2,6 +2,7 @@
 library(dssatr)
 library(magrittr)
 library(units)
+library(ggplot2)
 
 # Set a directory for testing
 testDir <- "./dssatr test"
@@ -24,22 +25,24 @@ extraction.dir <- stringr::str_c(output.dir,"/DATA/EXTRACTIONS") %T>%
   dir.create(showWarnings = F,
              recursive = T)
 
-# get point above Paul's Old Garden on the Crow Canyon campus
-aoi <- sf::st_point(c(-108.618642,37.355880)) %>%
-  sf::st_as_text() %>%
-  sf::st_as_sfc(4326)
-
-aoi <- sf::st_multipoint(
-  matrix(c(-109.25,37.95556,-109.25,37.95555,-109.25,38.05,-109.25,38.15),
-         nrow = 4,
-         byrow = TRUE)
-) %>%
-  sf::st_as_text() %>%
-  sf::st_as_sfc(4326)
+# # get point above Paul's Old Garden on the Crow Canyon campus
+# aoi <- sf::st_point(c(-108.618642,37.355880)) %>%
+#   sf::st_as_text() %>%
+#   sf::st_as_sfc(4326)
+# 
+# aoi <- sf::st_multipoint(
+#   matrix(c(-109.25,37.95556,-109.25,37.95555,-109.25,38.05,-109.25,38.15),
+#          nrow = 4,
+#          byrow = TRUE)
+# ) %>%
+#   sf::st_as_text() %>%
+#   sf::st_as_sfc(4326)
 
 # aoi <- dssat_ccac
 
-aoi <- dssat_mvnp
+# aoi <- dssat_mvnp
+
+aoi <- dssat_hopi
 
 # wkt_geom <- raster::extent(-110,-107,36,39) %>% 
 #   FedData::polygon_from_extent("+proj=longlat +datum=WGS84") %>%
@@ -50,8 +53,11 @@ aoi <- dssat_mvnp
 ssurgo.out <- aoi %>%
   dssatr:::dssat_get_ssurgo()
 
+ssurgo.out$mapunits %<>%
+  sf::st_make_valid()
+
 daymet.out <- aoi %>%
-  dssatr:::dssat_get_daymet(years = 2010:2011)
+  dssatr:::dssat_get_daymet(years = 2010:2012)
 
 weather <- daymet.out
 soil <- ssurgo.out
@@ -82,49 +88,65 @@ test <- out$yields %>%
 
   dplyr::group_by(tile,mukey,year) %>%
   dplyr::arrange(year,tile,mukey) %>%
+  dplyr::mutate(yield = ifelse(is.na(yield),0,yield)) %>%
   dplyr::summarise(yield = weighted.mean(x = yield,
-                                         w = `Component percent`)) %>%
+                                         w = `Component percent`,
+                                         na.rm = TRUE)) %>%
   dplyr::ungroup() %>%
-  dplyr::arrange(year,tile,mukey) %>%
+  dplyr::group_by(tile, mukey) %>%
+  dplyr::summarise(yield = max(yield)) %>%
+  dplyr::ungroup() %>%
+  dplyr::arrange(tile,mukey) %>%
   dplyr::left_join(out$fields %>%
                      dplyr::select(tile, mukey) %>% 
                      dplyr::distinct()) %>% 
   sf::st_sf()
   
-  test.plot <- test %>%
-    dplyr::filter(year == 2010) %>%
-    dplyr::select(yield)
-plot(test.plot,
-     ncol = 1000)
-
-test <- ssurgo.out %$%
-  mapunits %>%
-  sf::st_intersection(aoi) %>%
-  sf::st_intersection(x = daymet.out %>%
-                        dplyr::select(-weather),
-                      y = .) %>%
-  dplyr::left_join(ssurgo.out %$%
-                     components %>%
-                     dplyr::select(mukey, ID_SOIL),
-                   by = "mukey") %>%
-  dplyr::select(-mukey, -muname) %>%
-  dplyr::distinct() %>%
-  # tibble::as_tibble() %>%
-  sf::st_as_sf()
-
-cultivars = c("GF0001 Base Garst808-wh403")  
+test %>%
+  # dplyr::filter(year == 1985) %>%
+  dplyr::select(yield) %>%
+  ggplot() +
+  geom_sf(aes(fill = yield),
+          colour = NA) +
+  scale_fill_distiller("Yield (kg/ha)",
+                       palette = "RdYlGn",
+                       direction = 1) + # fill with brewer colors 
+  theme(line = element_blank(),                          # remove axis lines .. 
+        axis.text=element_blank(),                       # .. tickmarks..
+        axis.title=element_blank(),                      # .. axis labels..
+        panel.background = element_blank())
 
 
 
 
-test <- raster::raster("/Users/bocinsky/Downloads/daymet_v3_prcp_annttl_1980_na.nc4") %>%
+
+
+
+
+
+
+
+
+plot.ssurgo.components <- function(x, .vars, .funs){
+  x$components %>%
+    dplyr::select(mukey, `Component percent`, !!!.vars) %>%
+    dplyr::group_by(mukey) %>%
+    dplyr::summarise_at(.vars = .vars,
+                        .funs = .funs) %>%
+    dplyr::right_join(ssurgo.out$mapunits) %>%
+    sf::st_sf() %>%
+    dplyr::select(!!! .vars) %>%
+    dplyr::mutate_at(.vars = .vars,
+                     .funs = function(y){ifelse(is.infinite(y),0,y)}) %>%
+    plot()
+}
   
+ssurgo.out %>%
+  plot.ssurgo.components(.vars = dplyr::vars(SALB, SLRO),
+                         .funs = funs(weighted.mean(.,
+                                                    w = `Component percent`,
+                                                    na.rm = TRUE)))
 
-
-
-test <- dssat_spatial(template = mvnp,
-                      label = "MVNP",
-                      output.dir = output.dir,
-                      raw.dir = raw.dir,
-                      extraction.dir = extraction.dir,
-                      force.redo = FALSE)
+ssurgo.out %>%
+  plot.ssurgo.components(.vars = dplyr::vars(SALB, `Component percent`),
+                         .funs = funs(max(., na.rm = TRUE)))

@@ -31,11 +31,11 @@ dssat_run_batch <- function(name,
   
   # Write the soil file to the output directory (soil.sol)
   soil %>%
-    dssat_write_soil(output_dir = output_dir)
+    dssatr:::dssat_write_soil(output_dir = output_dir)
   
   # Write the weather files to the output directory (*.WTH files)
   weather %>%
-    dssat_write_weather(output_dir = output_dir)
+    dssatr:::dssat_write_weather(output_dir = output_dir)
   
   # Get the years of the simpulation from the weather file
   years <- weather$weather[[1]]$date %>%
@@ -62,8 +62,7 @@ dssat_run_batch <- function(name,
       dplyr::arrange(tile,
                      mukey,
                      -`Component percent`,
-                     ID_SOIL) #%>%
-      #na.omit()
+                     ID_SOIL)
   })
   
   cultivars <- cultivars %>%
@@ -87,7 +86,15 @@ dssat_run_batch <- function(name,
         dplyr::mutate(id = 1:nrow(.))
     })
   
-  fields %<>% 
+  soil_full <- soil
+  soil_full$components %<>%
+    dplyr::filter(!is.na(SALB))
+  soil_full$mapunits %<>%
+    dplyr::filter(mukey %in% soil_full$components$mukey)
+  
+  fields_run <- fields %>%
+    dplyr::filter(mukey %in% soil_full$mapunits$mukey,
+                  ID_SOIL %in% soil_full$components$cokey) %>%
     split(rep(1:ceiling(nrow(.)/99),each = 99)[1:nrow(.)]) %>%
     purrr::map(function(x){
       x %>%
@@ -95,7 +102,7 @@ dssat_run_batch <- function(name,
     })
   
   summary_out <- lapply(cultivars, function(cult){
-    lapply(fields, function(fiel){
+    lapply(fields_run, function(fiel){
       
       treatments <- expand.grid(
         cultivar = cult$id,
@@ -240,13 +247,13 @@ dssat_run_batch <- function(name,
       system2(command = "/users/bocinsky/DSSAT47/dscsm047",
               args = c("A",
                        "test0000.MZX"),
-              stdout = FALSE,
-              stderr = FALSE,
+              # stdout = FALSE,
+              # stderr = FALSE,
               wait = TRUE
       )
       setwd(currentwd)
 
-      summary_out <- dssat_read_summary_out(paste0(output_dir,"/Summary.OUT")) %>%
+      summary_out <- dssatr:::dssat_read_summary_out(paste0(output_dir,"/Summary.OUT")) %>%
         dplyr::select(TRNO,
                       SDAT,
                       HWAM) %>%
@@ -285,22 +292,29 @@ dssat_run_batch <- function(name,
   }) %>%
     dplyr::bind_rows()
   
+  fields_out <- weather_soil %>%
+    dplyr::left_join(fields) %>%
+    dplyr::select(field,
+                  dplyr::everything())
+  
+  cultivars_out <- cultivars %>%
+    dplyr::bind_rows() %>%
+    dplyr::select(-id)%>%
+    dplyr::select(cultivar,
+                  dplyr::everything())
 
-  out <- list(fields = weather_soil %>% 
-         dplyr::left_join(fields %>% 
-                            dplyr::bind_rows() %>%
-                            dplyr::select(-id),
-                          by = c("tile",
-                                 "mukey",
-                                 "ID_SOIL")) %>%
-         dplyr::select(field,
-                       dplyr::everything()),
-       cultivars = cultivars %>%
-         dplyr::bind_rows() %>%
-         dplyr::select(-id)%>%
-         dplyr::select(cultivar,
-                       dplyr::everything()),
-       yields = summary_out)
+  
+  out <- list(fields = fields_out,
+       cultivars = cultivars_out,
+       yields =   expand.grid(
+         cultivar = cultivars_out$cultivar,
+         field = fields_out$field,
+         year = weather$weather[[1]]$date %>%
+           lubridate::year() %>%
+           unique()
+       ) %>%
+         tibble::as_tibble() %>%
+         dplyr::left_join(summary_out))
   
   class(out) <- c(class(out), "yields")
   
