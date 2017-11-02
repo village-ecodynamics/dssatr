@@ -40,9 +40,9 @@ extraction.dir <- stringr::str_c(output.dir,"/DATA/EXTRACTIONS") %T>%
 
 # aoi <- dssat_ccac
 
-# aoi <- dssat_mvnp
+aoi <- dssat_mvnp
 
-aoi <- dssat_hopi
+# aoi <- dssat_hopi
 
 # wkt_geom <- raster::extent(-110,-107,36,39) %>% 
 #   FedData::polygon_from_extent("+proj=longlat +datum=WGS84") %>%
